@@ -1,7 +1,7 @@
-﻿define(["marionette", "app", "./scripts.dialog.view", "./scripts.dialog.model", "core/view.base"], function (Marionette, app, DialogView, Model, ViewBase) {
+﻿define(["marionette", "app", "./scripts.template.playground.dialog", "./scripts.template.playground.model", "core/view.base"], function (Marionette, app, DialogView, Model, ViewBase) {
     return ViewBase.extend({
         tagName: "li",
-        template: "scripts-template",
+        template: "scripts-template-playground",
         
         initialize: function () {
             var self = this;
@@ -17,8 +17,7 @@
         },
         
         isFilled: function () {
-             return this.templateModel.get("scriptId") ||
-                 ((this.templateModel.get("script") != null) && (this.templateModel.get("script").content != null));
+             return (this.templateModel.get("script") != null) && (this.templateModel.get("script").content != null);
         },
         
         openDialog: function () {
