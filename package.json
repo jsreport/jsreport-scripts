@@ -1,0 +1,42 @@
+{
+  "name": "jsreport-analytics",
+  "version": "0.0.1",
+  "description": "jsreport extension collecting some grouped information about usage",
+  "scripts": {
+    "test": "mocha test && standard"
+  },
+  "keywords": [
+    "jsreport",
+    "analytics"
+  ],
+  "standard": {
+    "ignore": [
+      "main.js"
+    ],
+    "globals": [
+      "describe",
+      "it",
+      "beforeEach",
+      "define",
+      "ace"
+    ]
+  },
+  "license": "LGPL",
+  "dependencies": {
+    "feedparser": "^1.1.4",
+    "moment": "^2.10.6",
+    "node.extend": "^1.1.5",
+    "q": "^1.4.1",
+    "sendgrid": "^1.9.2",
+    "shortid": "^2.2.4",
+    "underscore": "^1.8.3"
+  },
+  "author": "Jan Blaha",
+  "devDependencies": {
+    "eslint": "^1.9.0",
+    "mocha": "^2.3.3",
+    "should": "^7.1.1",
+    "standard": "^5.3.1",
+    "string": "^3.3.1"
+  }
+}
