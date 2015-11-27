@@ -29,7 +29,7 @@
   "dependencies": {
     "feedparser": "1.1.4",
     "moment": "2.10.6",
-    "node.extend": "1.1.5",
+    "node.extend.without.arrays": "1.1.5",
     "q": "1.4.1",
     "sendgrid": "1.9.2",
     "shortid": "2.2.4",

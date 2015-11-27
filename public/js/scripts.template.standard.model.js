@@ -1,7 +1,47 @@
-define(['app', 'core/basicModel', 'underscore'], function (app, ModelBase, _) {
+define(['app', 'jquery', 'core/basicModel', 'underscore'], function (app, $, ModelBase, _) {
   return ModelBase.extend({
 
-    fetch: function (options) {
+    fetchStandard: function (options) {
+      var self = this
+
+      var scripts = self.templateModel.get('scripts')
+
+      if (!scripts) {
+        var script = self.templateModel.get('script')
+
+        if (self.templateModel.get('scriptId')) {
+          script = {shortid: self.templateModel.get('scriptId')}
+        }
+
+        if (script) {
+          scripts = [script]
+        }
+      }
+
+      scripts = scripts || []
+
+      this.templateModel.set('scripts', scripts, {silent: true})
+
+      scripts = scripts.map(function (s) {
+        return s.shortid
+      })
+
+      this.set('scripts', scripts, {silent: true})
+
+      self.orderedScripts = {}
+
+      return app.dataProvider.get('odata/scripts').then(function (items) {
+        self.items = items
+
+        self.items.forEach(function (s) {
+          self.orderedScripts[s.shortid] = s
+          self.orderedScripts[s.shortid].order = scripts.indexOf(s.shortid)
+        })
+        options.success()
+      })
+    },
+
+    fetchEmbed: function (options) {
       var self = this
 
       function processItems (items) {
@@ -51,6 +91,14 @@ define(['app', 'core/basicModel', 'underscore'], function (app, ModelBase, _) {
       }
     },
 
+    fetch: function (options) {
+      if (app.options.studio !== 'embed') {
+        this.fetchStandard(options)
+      } else {
+        this.fetchEmbed(options)
+      }
+    },
+
     setTemplate: function (templateModel) {
       this.templateModel = templateModel
       this.listenTo(templateModel, 'api-overrides', this.apiOverride)
@@ -66,18 +114,35 @@ define(['app', 'core/basicModel', 'underscore'], function (app, ModelBase, _) {
 
     initialize: function () {
       var self = this
-      this.listenTo(this, 'change:shortid', function () {
-        self.templateModel.get('script').shortid = self.get('shortid') !== 'custom' ? self.get('shortid') : undefined
-        self.templateModel.get('script').content = self.get('shortid') === 'custom' ? self.get('content') : undefined
-        self.set(_.findWhere(self.items, {shortid: self.get('shortid')}))
-      })
 
-      this.listenTo(this, 'change:content', function () {
-        if (self.get('shortid') === 'custom') {
-          self.templateModel.get('script').content = self.get('content')
-          _.findWhere(self.items, {shortid: 'custom'}).content = self.get('content')
-        }
-      })
+      if (app.options.studio !== 'embed') {
+        this.listenTo(this, 'change', function () {
+          var scripts = self.get('scripts') || []
+          scripts = scripts.map(function (s) {
+            return $.extend({}, self.orderedScripts[s])
+          })
+          scripts.sort(function (a, b) {
+            return a.order - b.order
+          })
+          scripts = scripts.map(function (s) {
+            return {shortid: s.shortid}
+          })
+          self.templateModel.set('scripts', scripts)
+        })
+      } else {
+        this.listenTo(this, 'change:shortid', function () {
+          self.templateModel.get('script').shortid = self.get('shortid') !== 'custom' ? self.get('shortid') : undefined
+          self.templateModel.get('script').content = self.get('shortid') === 'custom' ? self.get('content') : undefined
+          self.set(_.findWhere(self.items, {shortid: self.get('shortid')}))
+        })
+
+        this.listenTo(this, 'change:content', function () {
+          if (self.get('shortid') === 'custom') {
+            self.templateModel.get('script').content = self.get('content')
+            _.findWhere(self.items, {shortid: 'custom'}).content = self.get('content')
+          }
+        })
+      }
     }
   })
 })

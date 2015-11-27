@@ -53,6 +53,45 @@ describe('scripts', function () {
     }).catch(done)
   })
 
+  it('should be able to handle multiple scripts in handleBeforeRender', function (done) {
+    reporter.documentStore.collection('scripts').insert({
+      content: 'function beforeRender(done) { request.template.content = \'a\'; done(); }',
+      shortid: 'a'
+    }).then(function () {
+      return reporter.documentStore.collection('scripts').insert({
+        content: 'function beforeRender(done) { request.template.content += \'b\'; done(); }',
+        shortid: 'b'
+      })
+    }).then(function () {
+      var req = {reporter: reporter, template: {content: 'foo', scripts: [{shortid: 'a'}, {shortid: 'b'}]}}
+      return reporter.scripts.handleBeforeRender(req, {}).then(function () {
+        req.template.content.should.be.eql('ab')
+        done()
+      })
+    }).catch(done)
+  })
+
+  it('should be able to handle multiple scripts in afterRender', function (done) {
+    reporter.documentStore.collection('scripts').insert({
+      content: 'function afterRender(done) { response.content = \'a\'; done(); }',
+      shortid: 'a'
+    }).then(function () {
+      return reporter.documentStore.collection('scripts').insert({
+        content: 'function afterRender(done) { response.content = new Buffer(response.content).toString() + \'b\'; done(); }',
+        shortid: 'b'
+      })
+    }).then(function () {
+      var req = {
+        reporter: reporter,
+        template: {engine: 'none', recipe: 'html', content: 'foo', scripts: [{shortid: 'a'}, {shortid: 'b'}]}
+      }
+      return reporter.render(req, {}).then(function (res) {
+        res.content.toString().should.be.eql('ab')
+        done()
+      })
+    }).catch(done)
+  })
+
   it('should be able to modify request.data', function (done) {
     prepareRequest("request.data = 'xxx'; done()").then(function (res) {
       return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
