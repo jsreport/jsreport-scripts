@@ -188,7 +188,8 @@ describe('scripts', function () {
       return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
         done(new Error('no error was thrown when it should have been'))
       })
-    }).catch(function () {
+    }).catch(function (e) {
+      e.canceled.should.be.ok
       done()
     })
   })
