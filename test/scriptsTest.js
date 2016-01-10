@@ -2,7 +2,6 @@ require('should')
 var assert = require('assert')
 var path = require('path')
 var q = require('q')
-var domain = require('domain')
 var Reporter = require('jsreport-core').Reporter
 
 describe('scripts', function () {
@@ -14,8 +13,6 @@ describe('scripts', function () {
     })
 
     reporter.init().then(function () {
-      process.domain = process.domain || domain.create()
-      process.domain.req = {}
       done()
     }).fail(done)
   })
