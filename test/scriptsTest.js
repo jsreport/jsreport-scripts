@@ -29,14 +29,14 @@ describe('scripts', function () {
   function prepareRequest (scriptContent) {
     return prepareTemplate(scriptContent).then(function (template) {
       return q({
-        request: {template: template, reporter: reporter, options: {}},
+        request: {template: template, reporter: reporter, options: {}, logger: reporter.logger},
         response: {}
       })
     })
   }
 
   it('should find script by its name', function (done) {
-    var req = {template: {script: {name: 'foo'}}, reporter: reporter}
+    var req = {template: {script: {name: 'foo'}}, reporter: reporter, logger: reporter.logger}
     var res = {}
 
     return reporter.documentStore.collection('scripts').insert({
@@ -60,7 +60,7 @@ describe('scripts', function () {
         shortid: 'b'
       })
     }).then(function () {
-      var req = {reporter: reporter, template: {content: 'foo', scripts: [{shortid: 'a'}, {shortid: 'b'}]}}
+      var req = {reporter: reporter, logger: reporter.logger, template: {content: 'foo', scripts: [{shortid: 'a'}, {shortid: 'b'}]}}
       return reporter.scripts.handleBeforeRender(req, {}).then(function () {
         req.template.content.should.be.eql('ab')
         done()
@@ -80,6 +80,7 @@ describe('scripts', function () {
     }).then(function () {
       var req = {
         reporter: reporter,
+        logger: reporter.logger,
         template: {engine: 'none', recipe: 'html', content: 'foo', scripts: [{shortid: 'a'}, {shortid: 'b'}]}
       }
       return reporter.render(req, {}).then(function (res) {
@@ -214,6 +215,7 @@ describe('scripts', function () {
       recipe: 'html'
     }).then(function (tmpl) {
       var request = {
+        logger: reporter.logger,
         template: {
           content: 'original',
           recipe: 'html',
@@ -232,6 +234,7 @@ describe('scripts', function () {
 
   it('callback error should be gracefully handled', function (done) {
     var request = {
+      logger: reporter.logger,
       template: {
         content: 'original',
         recipe: 'html',
@@ -258,6 +261,7 @@ describe('scripts', function () {
     }).then(function (tmpl) {
       var request = {
         template: {
+          logger: reporter.logger,
           content: 'original',
           recipe: 'html',
           engine: 'jsrender',
@@ -278,6 +282,7 @@ describe('scripts', function () {
     this.timeout(5000)
     reporter.documentStore.collection('templates').insert({
       name: 'foo',
+      logger: reporter.logger,
       content: 'foo',
       engine: 'jsrender',
       recipe: 'html',
