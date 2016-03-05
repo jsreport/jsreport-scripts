@@ -395,6 +395,15 @@ describe('scripts', function () {
           })
       }).catch(done)
     })
+
+    it('should ignore empty script object', function (done) {
+      var req = {template: {script: {}}, reporter: reporter, logger: reporter.logger}
+      var res = {}
+
+      return reporter.scripts.handleBeforeRender(req, res).then(function () {
+        done()
+      }).catch(done)
+    })
   }
 })
 
