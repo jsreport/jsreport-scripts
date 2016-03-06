@@ -4,6 +4,11 @@
     "node": true,
     "mocha": true
   },
+  "standard": {
+    "ignore": [
+      "public/**"
+    ]
+  },
   "globals": {
     "define": true,
     "ace": true

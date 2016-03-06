@@ -1,7 +1,7 @@
-define(['app', 'marionette', 'backbone',
-    './scripts.list.model', './scripts.list.view', './scripts.list.toolbar.view',
-    './scripts.model', './scripts.template.standard.view',
-    './scripts.template.standard.model', './scripts.detail.view', './scripts.toolbar.view'],
+define(["app", "marionette", "backbone",
+    "./scripts.list.model", "./scripts.list.view", "./scripts.list.toolbar.view",
+    "./scripts.model", "./scripts.template.standard.view",
+    "./scripts.template.standard.model", "./scripts.detail.view", "./scripts.toolbar.view"],
   function (app, Marionette, Backbone, ScriptsListModel, ScriptsListView, ScriptsListToolbarView,
             ScriptsModel, StandardTemplateView, StandardTemplateModel, ScriptsDetailView, ToolbarView,
             entityRegistration) {

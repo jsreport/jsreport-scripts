@@ -16,7 +16,8 @@
   ],
   "standard": {
     "ignore": [
-      "main.js"
+      "main.js",
+      "main_dev.js"
     ],
     "globals": [
       "describe",
