@@ -197,7 +197,7 @@ describe('scripts', function () {
 
     it('should not be able to read local files', function (done) {
       var scriptContent = "var fs = require('fs'); " +
-        "fs.readdir('d:\', function(err, files) { response.filesLength = files.length; done(); });"
+        "fs.readdir('d:\\', function(err, files) { response.filesLength = files.length; done(); });"
 
       prepareRequest(scriptContent)
         .then(function (res) {
