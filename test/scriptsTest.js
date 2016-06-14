@@ -183,18 +183,6 @@ describe('scripts', function () {
       }).fin(done)
     })
 
-    it('should be able to use linked modules', function (done) {
-      var scriptContent = "request.template.content = require('underscore').isArray([]); " +
-        'done();'
-
-      prepareRequest(scriptContent).then(function (res) {
-        return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
-          res.request.template.content.should.be.eql(true)
-          done()
-        })
-      }).catch(done)
-    })
-
     it('should not be able to read local files', function (done) {
       var scriptContent = "var fs = require('fs'); " +
         "fs.readdir('d:\\', function(err, files) { response.filesLength = files.length; done(); });"

@@ -1,6 +1,6 @@
 {
   "name": "jsreport-scripts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "jsreport extension capable of running custom javascript functions during the rendering process",
   "scripts": {
     "test": "mocha test --timeout 5000 && standard",
@@ -28,13 +28,9 @@
   },
   "license": "LGPL",
   "dependencies": {
-    "feedparser": "1.1.4",
     "in-publish": "2.0.0",
-    "moment": "2.13.0",
     "q": "1.4.1",
-    "sendgrid": "2.0.0",
-    "shortid": "2.2.6",
-    "underscore": "1.8.3"
+    "shortid": "2.2.6"
   },
   "author": "Jan Blaha",
   "devDependencies": {
