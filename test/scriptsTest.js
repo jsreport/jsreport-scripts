@@ -404,6 +404,14 @@ describe('scripts', function () {
         done()
       }).catch(done)
     })
+
+    it('should pass request,response and done as function arguments', function (done) {
+      prepareRequest("function beforeRender(req, res, done) { req.template.content = 'xxx'; done()").then(function (res) {
+        return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
+          assert.equal('xxx', res.request.template.content)
+        })
+      }).fin(done)
+    })
   }
 })
 
