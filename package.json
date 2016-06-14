@@ -1,10 +1,11 @@
 {
   "name": "jsreport-scripts",
-  "version": "0.5.2",
+  "version": "1.0.0",
   "description": "jsreport extension capable of running custom javascript functions during the rendering process",
   "scripts": {
     "test": "mocha test --timeout 5000 && standard",
-    "prepublish": "node node_modules/jsreport-express/tools/optimize.js"
+    "build": "npm run prepublish",
+    "prepublish": "in-publish && jsreport-studio-build || not-in-publish"
   },
   "homepage": "https://github.com/jsreport/jsreport-scripts",
   "repository": {
@@ -16,37 +17,38 @@
   ],
   "standard": {
     "ignore": [
-      "main.js",
-      "main_dev.js"
+      "main.js"
     ],
-    "globals": [
-      "describe",
-      "it",
-      "beforeEach",
-      "define",
-      "ace"
-    ]
+    "parser": "babel-eslint",
+    "env": {
+      "node": true,
+      "mocha": true,
+      "browser": true
+    }
   },
   "license": "LGPL",
   "dependencies": {
     "feedparser": "1.1.4",
-    "moment": "2.10.6",
+    "in-publish": "2.0.0",
+    "moment": "2.13.0",
     "q": "1.4.1",
-    "sendgrid": "1.9.2",
-    "shortid": "2.2.4",
+    "sendgrid": "2.0.0",
+    "shortid": "2.2.6",
     "underscore": "1.8.3"
   },
   "author": "Jan Blaha",
   "devDependencies": {
-    "eslint": "^1.9.0",
+    "babel-eslint": "6.0.4",
+    "eslint": "2.11.1",
+    "eslint-config-standard-jsx": "1.2.1",
+    "eslint-plugin-babel": "3.2.0",
     "jsreport-core": "*",
-    "jsreport-express": "*",
     "jsreport-jsrender": "*",
     "jsreport-templates": "*",
-    "mocha": "^2.3.3",
-    "requirejs": "^2.1.22",
-    "should": "^7.1.1",
-    "standard": "^5.3.1",
-    "string": "^3.3.1"
+    "mocha": "2.5.3",
+    "requirejs": "2.2.0",
+    "should": "9.0.2",
+    "standard": "7.1.2",
+    "string": "3.3.1"
   }
 }
