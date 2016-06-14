@@ -115,11 +115,11 @@ describe('scripts', function () {
 
     it('should be able to handle multiple scripts in handleBeforeRender', function (done) {
       reporter.documentStore.collection('scripts').insert({
-        content: 'function beforeRender(done) { request.template.content = \'a\'; done(); }',
+        content: 'function beforeRender(request, response, done) { request.template.content = \'a\'; done(); }',
         shortid: 'a'
       }).then(function () {
         return reporter.documentStore.collection('scripts').insert({
-          content: 'function beforeRender(done) { request.template.content += \'b\'; done(); }',
+          content: 'function beforeRender(request, response, done) { request.template.content += \'b\'; done(); }',
           shortid: 'b'
         })
       }).then(function () {
@@ -137,11 +137,11 @@ describe('scripts', function () {
 
     it('should be able to handle multiple scripts in afterRender', function (done) {
       reporter.documentStore.collection('scripts').insert({
-        content: 'function afterRender(done) { response.content = \'a\'; done(); }',
+        content: 'function afterRender(request, response, done) { response.content = \'a\'; done(); }',
         shortid: 'a'
       }).then(function () {
         return reporter.documentStore.collection('scripts').insert({
-          content: 'function afterRender(done) { response.content = new Buffer(response.content).toString() + \'b\'; done(); }',
+          content: 'function afterRender(request, response, done) { response.content = new Buffer(response.content).toString() + \'b\'; done(); }',
           shortid: 'b'
         })
       }).then(function () {
@@ -219,7 +219,7 @@ describe('scripts', function () {
     })
 
     it('should be able to processes beforeRender function', function (done) {
-      prepareRequest("function beforeRender(done){ request.template.content = 'xxx'; done(); }").then(function (res) {
+      prepareRequest("function beforeRender(request, response, done){ request.template.content = 'xxx'; done(); }").then(function (res) {
         return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
           assert.equal('xxx', res.request.template.content)
           done()
@@ -228,7 +228,7 @@ describe('scripts', function () {
     })
 
     it('should be able to processes afterRender function', function (done) {
-      prepareRequest('function afterRender(done){ response.content[0] = 1; done(); }').then(function (res) {
+      prepareRequest('function afterRender(request, response, done){ response.content[0] = 1; done(); }').then(function (res) {
         return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
           res.response.content = new Buffer([1])
           return reporter.scripts.handleAfterRender(res.request, res.response).then(function () {
@@ -318,7 +318,7 @@ describe('scripts', function () {
             recipe: 'html',
             engine: 'jsrender',
             script: {
-              content: "function beforeRender(done) { reporter.render({ template: { shortid: '" + tmpl.shortid + "'} }, function(err, resp) { if (err) return done(err); " +
+              content: "function beforeRender(request, response, done) { reporter.render({ template: { shortid: '" + tmpl.shortid + "'} }, function(err, resp) { if (err) return done(err); " +
               'request.template.content = new Buffer(resp.content).toString(); done(); }); };'
             }
           }
@@ -340,7 +340,7 @@ describe('scripts', function () {
         recipe: 'html',
         shortid: 'id',
         script: {
-          content: "function beforeRender(done) { reporter.render({ template: { shortid: 'id'} }, function(err, resp) { if (err) return done(err); " +
+          content: "function beforeRender(request, response, done) { reporter.render({ template: { shortid: 'id'} }, function(err, resp) { if (err) return done(err); " +
           'request.template.content = new Buffer(resp.content).toString(); done(); }); };'
         }
       }).then(function (tmpl) {
@@ -359,7 +359,7 @@ describe('scripts', function () {
     })
 
     it('should be able to require local scripts', function (done) {
-      var scriptContent = "function beforeRender(done) { request.template.content = require('helperA')(); done() }"
+      var scriptContent = "function beforeRender(request, response, done) { request.template.content = require('helperA')(); done() }"
       reporter = Reporter({
         scripts: {
           allowedModules: ['helperA']
@@ -378,7 +378,7 @@ describe('scripts', function () {
     })
 
     it('should be unblock modules with allowedModules = *', function (done) {
-      var scriptContent = "function beforeRender(done) { request.template.content = require('helperA')(); done() }"
+      var scriptContent = "function beforeRender(request, response, done) { request.template.content = require('helperA')(); done() }"
       reporter = Reporter({
         scripts: {
           allowedModules: '*'
@@ -405,10 +405,19 @@ describe('scripts', function () {
       }).catch(done)
     })
 
-    it('should pass request,response and done as function arguments', function (done) {
-      prepareRequest("function beforeRender(req, res, done) { req.template.content = 'xxx'; done()").then(function (res) {
+    it('should be back compatible with single done parameter in beforeRender function', function (done) {
+      prepareRequest("function beforeRender(done) { request.template.content = 'xxx'; done()").then(function (res) {
         return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
           assert.equal('xxx', res.request.template.content)
+        })
+      }).fin(done)
+    })
+
+    it('should be back compatible with single done parameter in afterRender function', function (done) {
+      prepareRequest('function afterRender(done) {  response.content[0] = 1; done();').then(function (res) {
+        return reporter.scripts.handleAfterRender(res.request, res.response).then(function () {
+          assert.equal(1, res.response.content[0])
+          done()
         })
       }).fin(done)
     })
