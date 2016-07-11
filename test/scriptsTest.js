@@ -409,6 +409,15 @@ describe('scripts', function () {
         })
       }).fin(done)
     })
+
+    it('should be possible to declare global request object', function (done) {
+      prepareRequest('var request = function () { return 5; } \n function beforeRender(req, res, done) { req.template.content = request(); done() }').then(function (res) {
+        return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
+          res.request.template.content.should.be.eql(5)
+          done()
+        })
+      }).catch(done)
+    })
   }
 })
 
