@@ -4,7 +4,8 @@ import Studio from 'jsreport-studio'
 
 Studio.addEntitySet({ name: 'scripts', faIcon: 'fa-cogs', visibleName: 'script', helpUrl: 'http://jsreport.net/learn/scripts' })
 Studio.addPropertiesComponent(Properties.title, Properties, (entity) => entity.__entitySet === 'templates')
-Studio.addEditorComponent('scripts', ScriptEditor)
+
+Studio.addEditorComponent('scripts', ScriptEditor, (reformatter, entity) => ({ content: reformatter(entity.content, 'js') }))
 
 Studio.addApiSpec({
   template: {
