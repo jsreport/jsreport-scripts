@@ -157,6 +157,29 @@ describe('scripts', function () {
       }).catch(done)
     })
 
+    it('should prepend global scripts in beforeRender', function (done) {
+      reporter.documentStore.collection('scripts').insert({
+        content: 'function beforeRender(request, response, done) { request.template.content += \'a\'; done(); }',
+        shortid: 'a'
+      }).then(function () {
+        return reporter.documentStore.collection('scripts').insert({
+          content: 'function beforeRender(request, response, done) { request.template.content += \'b\'; done(); }',
+          shortid: 'b',
+          isGlobal: true
+        })
+      }).then(function () {
+        var req = {
+          reporter: reporter,
+          logger: reporter.logger,
+          template: { content: '', scripts: [{ shortid: 'a' }] }
+        }
+        return reporter.scripts.handleBeforeRender(req, {}).then(function () {
+          req.template.content.should.be.eql('ba')
+          done()
+        })
+      }).catch(done)
+    })
+
     it('should be able to modify request.data', function (done) {
       prepareRequest("request.data = 'xxx'; done()").then(function (res) {
         return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {

@@ -1,9 +1,11 @@
 import ScriptEditor from './ScriptEditor.js'
-import Properties from './ScriptProperties.js'
+import TemplateScriptProperties from './TemplateScriptProperties.js'
+import ScriptProperties from './ScriptProperties.js'
 import Studio from 'jsreport-studio'
 
 Studio.addEntitySet({ name: 'scripts', faIcon: 'fa-cogs', visibleName: 'script', helpUrl: 'http://jsreport.net/learn/scripts' })
-Studio.addPropertiesComponent(Properties.title, Properties, (entity) => entity.__entitySet === 'templates')
+Studio.addPropertiesComponent(TemplateScriptProperties.title, TemplateScriptProperties, (entity) => entity.__entitySet === 'templates')
+Studio.addPropertiesComponent(ScriptProperties.title, ScriptProperties, (entity) => entity.__entitySet === 'scripts')
 
 Studio.addEditorComponent('scripts', ScriptEditor, (reformatter, entity) => ({ content: reformatter(entity.content, 'js') }))
 
