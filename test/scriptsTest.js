@@ -20,7 +20,7 @@ describe('scripts', function () {
   describe('scritps with http-server strategy', function () {
     beforeEach(function (done) {
       reporter = Reporter({
-        tasks: {strategy: 'http-server'}
+        tasks: { strategy: 'http-server' }
       }).use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')())
       reporter.init().then(function () {
         done()
@@ -34,7 +34,7 @@ describe('scripts', function () {
   describe('scritps with in-process strategy', function () {
     beforeEach(function (done) {
       reporter = Reporter({
-        tasks: {strategy: 'in-process'},
+        tasks: { strategy: 'in-process' },
         scripts: {
           allowedModules: ['./helperA', 'underscore']
         }
@@ -49,7 +49,7 @@ describe('scripts', function () {
         logger: reporter.logger,
         reporter: reporter,
         template: {
-          scripts: [{content: "function beforeRender(done) { request.template.content = require('./helperA')(); done(); }"}]
+          scripts: [{ content: "function beforeRender(done) { request.template.content = require('./helperA')(); done(); }" }]
         }
       }
 
@@ -63,10 +63,10 @@ describe('scripts', function () {
   })
 
   function prepareTemplate (scriptContent) {
-    return reporter.documentStore.collection('scripts').insert({content: scriptContent}).then(function (script) {
+    return reporter.documentStore.collection('scripts').insert({ content: scriptContent }).then(function (script) {
       return reporter.documentStore.collection('templates').insert({
         content: 'foo',
-        script: {shortid: script.shortid}
+        script: { shortid: script.shortid }
       })
     })
   }
@@ -74,7 +74,7 @@ describe('scripts', function () {
   function prepareRequest (scriptContent) {
     return prepareTemplate(scriptContent).then(function (template) {
       return q({
-        request: {template: template, reporter: reporter, options: {}, logger: reporter.logger},
+        request: { template: template, reporter: reporter, options: {}, logger: reporter.logger },
         response: {}
       })
     })
@@ -99,7 +99,7 @@ describe('scripts', function () {
 
   function common () {
     it('should find script by its name', function (done) {
-      var req = {template: {script: {name: 'foo'}}, reporter: reporter, logger: reporter.logger}
+      var req = { template: { script: { name: 'foo' } }, reporter: reporter, logger: reporter.logger }
       var res = {}
 
       return reporter.documentStore.collection('scripts').insert({
@@ -126,7 +126,7 @@ describe('scripts', function () {
         var req = {
           reporter: reporter,
           logger: reporter.logger,
-          template: {content: 'foo', scripts: [{shortid: 'a'}, {shortid: 'b'}]}
+          template: { content: 'foo', scripts: [{ shortid: 'a' }, { shortid: 'b' }] }
         }
         return reporter.scripts.handleBeforeRender(req, {}).then(function () {
           req.template.content.should.be.eql('ab')
@@ -148,7 +148,7 @@ describe('scripts', function () {
         var req = {
           reporter: reporter,
           logger: reporter.logger,
-          template: {engine: 'none', recipe: 'html', content: 'foo', scripts: [{shortid: 'a'}, {shortid: 'b'}]}
+          template: { engine: 'none', recipe: 'html', content: 'foo', scripts: [{ shortid: 'a' }, { shortid: 'b' }] }
         }
         return reporter.render(req, {}).then(function (res) {
           res.content.toString().should.be.eql('ab')
@@ -225,6 +225,15 @@ describe('scripts', function () {
           })
         })
       }).catch(done)
+    })
+
+    it('res.content in afterRender should be buffer', function () {
+      return prepareRequest('function afterRender(req, res, done){ if (!Buffer.isBuffer(res.content)) { return done(new Error(\'not a buffer\')) } done(); }').then(function (res) {
+        return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
+          res.response.content = new Buffer([1])
+          return reporter.scripts.handleAfterRender(res.request, res.response)
+        })
+      })
     })
 
     it('should be able to add property to request', function (done) {
@@ -385,7 +394,7 @@ describe('scripts', function () {
     })
 
     it('should ignore empty script object', function (done) {
-      var req = {template: {script: {}}, reporter: reporter, logger: reporter.logger}
+      var req = { template: { script: {} }, reporter: reporter, logger: reporter.logger }
       var res = {}
 
       return reporter.scripts.handleBeforeRender(req, res).then(function () {
