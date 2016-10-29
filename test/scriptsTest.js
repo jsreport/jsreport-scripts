@@ -135,6 +135,18 @@ describe('scripts', function () {
       }).catch(done)
     })
 
+    it('should throw only weak error when script is not found', function () {
+      var req = {
+        reporter: reporter,
+        logger: reporter.logger,
+        template: { content: 'foo', scripts: [{ shortid: 'a' }] }
+      }
+
+      return reporter.scripts.handleBeforeRender(req, {}).catch(function (e) {
+        e.weak.should.be.ok
+      })
+    })
+
     it('should be able to handle multiple scripts in afterRender', function (done) {
       reporter.documentStore.collection('scripts').insert({
         content: 'function afterRender(request, response, done) { response.content = \'a\'; done(); }',
