@@ -462,6 +462,18 @@ describe('scripts', function () {
         })
       }).catch(done)
     })
+
+    it('should fire beforeScriptListeners', function (done) {
+      prepareRequest('function beforeRender(req, res, done) { done() }').then(function (res) {
+        reporter.beforeScriptListeners.add('test', function (def) {
+          def.script.should.be.ok
+          done()
+        })
+        return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
+
+        })
+      }).catch(done)
+    })
   }
 })
 
