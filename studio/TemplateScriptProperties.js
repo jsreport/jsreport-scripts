@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 
 export default class TemplateScriptProperties extends Component {
   selectScripts (entities) {
-    return Object.keys(entities).filter((k) => entities[k].__entitySet === 'scripts').map((k) => entities[k])
+    return Object.keys(entities).filter((k) => entities[k].__entitySet === 'scripts' && !entities[k].isGlobal).map((k) => entities[k])
   }
 
   static getSelectedScripts (entity, entities) {
