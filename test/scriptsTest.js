@@ -43,7 +43,7 @@ describe('scripts', function () {
       }).fail(done)
     })
 
-    it('should be able to require local functions', function (done) {
+    it('should be able to require local functions', function () {
       var req = {
         logger: reporter.logger,
         reporter: reporter,
@@ -54,8 +54,7 @@ describe('scripts', function () {
 
       return reporter.scripts.handleBeforeRender(req, {}).then(function (res) {
         req.template.content.should.be.eql('a')
-        done()
-      }).catch(done)
+      })
     })
 
     common()
@@ -97,7 +96,7 @@ describe('scripts', function () {
   }
 
   function common () {
-    it('should find script by its name', function (done) {
+    it('should find script by its name', function () {
       var req = { template: { script: { name: 'foo' } }, reporter: reporter, logger: reporter.logger }
       var res = {}
 
@@ -107,9 +106,8 @@ describe('scripts', function () {
       }).then(function (script) {
         return reporter.scripts.handleBeforeRender(req, res).then(function () {
           assert.equal('xxx', req.template.content)
-          done()
         })
-      }).catch(done)
+      })
     })
 
     it('should be able to handle multiple scripts in handleBeforeRender', function (done) {
@@ -315,7 +313,7 @@ describe('scripts', function () {
       }).catch(done)
     })
 
-    it('callback error should be gracefully handled', function (done) {
+    it('callback error should be gracefully handled', function () {
       var request = {
         logger: reporter.logger,
         template: {
@@ -328,10 +326,9 @@ describe('scripts', function () {
         }
       }
       return reporter.render(request).then(function (response) {
-        done(new Error('Should have failed.'))
+        throw new Error('Should have failed.')
       }).catch(function (e) {
         e.message.should.containEql('template property must')
-        done()
       })
     })
 
@@ -427,13 +424,11 @@ describe('scripts', function () {
       }).catch(done)
     })
 
-    it('should ignore empty script object', function (done) {
+    it('should ignore empty script object', function () {
       var req = { template: { script: {} }, reporter: reporter, logger: reporter.logger }
       var res = {}
 
-      return reporter.scripts.handleBeforeRender(req, res).then(function () {
-        done()
-      }).catch(done)
+      return reporter.scripts.handleBeforeRender(req, res)
     })
 
     it('should be back compatible with single done parameter in beforeRender function', function (done) {
