@@ -1,6 +1,5 @@
 require('should')
 var assert = require('assert')
-var q = require('q')
 var Reporter = require('jsreport-core')
 
 describe('scripts', function () {
@@ -73,10 +72,10 @@ describe('scripts', function () {
 
   function prepareRequest (scriptContent) {
     return prepareTemplate(scriptContent).then(function (template) {
-      return q({
+      return {
         request: { template: template, reporter: reporter, options: {}, logger: reporter.logger },
         response: {}
-      })
+      }
     })
   }
 
