@@ -8,7 +8,8 @@ Studio.addEntitySet(
     faIcon: 'fa-cog',
     visibleName: 'script',
     helpUrl: 'http://jsreport.net/learn/scripts',
-    referenceAttributes: ['isGlobal']
+    referenceAttributes: ['isGlobal'],
+    entityTreePosition: 800
   })
 Studio.addPropertiesComponent(TemplateScriptProperties.title, TemplateScriptProperties, (entity) => entity.__entitySet === 'templates')
 Studio.addPropertiesComponent(ScriptProperties.title, ScriptProperties, (entity) => entity.__entitySet === 'scripts')
