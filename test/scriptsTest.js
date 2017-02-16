@@ -5,11 +5,9 @@ var Reporter = require('jsreport-core')
 describe('scripts', function () {
   var reporter
   describe('scritps with dedicated-process strategy', function () {
-    beforeEach(function (done) {
+    beforeEach(function () {
       reporter = Reporter().use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')())
-      reporter.init().then(function () {
-        done()
-      }).fail(done)
+      return reporter.init()
     })
 
     common()
@@ -17,13 +15,11 @@ describe('scripts', function () {
   })
 
   describe('scritps with http-server strategy', function () {
-    beforeEach(function (done) {
+    beforeEach(function () {
       reporter = Reporter({
         tasks: { strategy: 'http-server' }
       }).use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')())
-      reporter.init().then(function () {
-        done()
-      }).fail(done)
+      return reporter.init()
     })
 
     common()
@@ -31,16 +27,14 @@ describe('scripts', function () {
   })
 
   describe('scritps with in-process strategy', function () {
-    beforeEach(function (done) {
+    beforeEach(function () {
       reporter = Reporter({
         tasks: { strategy: 'in-process' },
         scripts: {
           allowedModules: ['./helperA', 'underscore']
         }
       }).use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')())
-      reporter.init().then(function () {
-        done()
-      }).fail(done)
+      return reporter.init()
     })
 
     it('should be able to require local functions', function () {
@@ -207,12 +201,12 @@ describe('scripts', function () {
       }).catch(done)
     })
 
-    it('should be able to modify request.template.content', function (done) {
-      prepareRequest("request.template.content = 'xxx'; done()").then(function (res) {
+    it('should be able to modify request.template.content', function () {
+      return prepareRequest("request.template.content = 'xxx'; done()").then(function (res) {
         return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
           assert.equal('xxx', res.request.template.content)
         })
-      }).fin(done)
+      })
     })
 
     it('should not be able to read local files', function (done) {
@@ -436,7 +430,7 @@ describe('scripts', function () {
         return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
           assert.equal('xxx', res.request.template.content)
         })
-      }).fin(done)
+      }).finally(done)
     })
 
     it('should be back compatible with single done parameter in afterRender function', function (done) {
@@ -445,7 +439,7 @@ describe('scripts', function () {
           assert.equal(1, res.response.content[0])
           done()
         })
-      }).fin(done)
+      }).finally(done)
     })
 
     it('should be possible to declare global request object', function (done) {
