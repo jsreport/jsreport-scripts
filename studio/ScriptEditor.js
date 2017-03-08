@@ -18,4 +18,3 @@ export default class ScriptEditor extends Component {
       />)
   }
 }
-

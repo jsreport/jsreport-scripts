@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 
 export default class ScriptProperties extends Component {
-
   static title (entity, entities) {
     return `scripts (global: ${entity.isGlobal === true})`
   }
@@ -20,4 +19,3 @@ export default class ScriptProperties extends Component {
     )
   }
 }
-
