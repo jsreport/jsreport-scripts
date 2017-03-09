@@ -6,7 +6,7 @@ describe('scripts', function () {
   var reporter
   describe('scritps with dedicated-process strategy', function () {
     beforeEach(function () {
-      reporter = Reporter().use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')())
+      reporter = Reporter().use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')({ timeout: 2000 }))
       return reporter.init()
     })
 
@@ -18,7 +18,7 @@ describe('scripts', function () {
     beforeEach(function () {
       reporter = Reporter({
         tasks: { strategy: 'http-server' }
-      }).use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')())
+      }).use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')({ timeout: 2000 }))
       return reporter.init()
     })
 
@@ -31,7 +31,8 @@ describe('scripts', function () {
       reporter = Reporter({
         tasks: { strategy: 'in-process' },
         scripts: {
-          allowedModules: ['./helperA', 'underscore']
+          allowedModules: ['./helperA', 'underscore'],
+          timeout: 2000
         }
       }).use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')())
       return reporter.init()
@@ -73,8 +74,7 @@ describe('scripts', function () {
   }
 
   function commonSafe () {
-    // TODO, after domains were removed, we are not able to see the actual error
-    it.skip('should propagate exception from async back', function (done) {
+    it('should propagate exception from async back', function (done) {
       prepareRequest('setTimeout(function() { foo; }, 0);').then(function (res) {
         return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
           done(new Error('no error was thrown when it should have been'))
@@ -462,6 +462,16 @@ describe('scripts', function () {
 
         })
       }).catch(done)
+    })
+
+    it('should terminate execution with endless loop after timeout', function (done) {
+      prepareRequest('function beforeRender(req, res, done) { while(true) { }; done() }').then(function (res) {
+        return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
+          done(new Error('should have failed'))
+        })
+      }).catch(function (e) {
+        done()
+      })
     })
   }
 })
