@@ -4,12 +4,12 @@
 
 > jsreport extension capable of running custom javascript functions during the rendering process
 
-See http://jsreport.net/learn/scripts
+See https://jsreport.net/learn/scripts
 
-##Installation
+## Installation
 > npm install jsreport-scripts
 
-##jsreport-core
+## jsreport-core
 You can apply this extension also manually to [jsreport-core](https://github.com/jsreport/jsreport-core)
 
 ```js
