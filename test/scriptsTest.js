@@ -105,7 +105,7 @@ describe('scripts', function () {
       })
     })
 
-    it('should be able to handle multiple scripts in handleBeforeRender', function (done) {
+    it('should be able to handle multiple scripts in handleBeforeRender and execute them in order', function (done) {
       reporter.documentStore.collection('scripts').insert({
         content: 'function beforeRender(request, response, done) { request.template.content = \'a\'; done(); }',
         shortid: 'a'
@@ -115,13 +115,23 @@ describe('scripts', function () {
           shortid: 'b'
         })
       }).then(function () {
+        return reporter.documentStore.collection('scripts').insert({
+          content: 'function beforeRender(request, response, done) { request.template.content += \'c\'; done(); }',
+          shortid: 'c'
+        })
+      }).then(function () {
+        return reporter.documentStore.collection('scripts').insert({
+          content: 'function beforeRender(request, response, done) { request.template.content += \'d\'; done(); }',
+          shortid: 'd'
+        })
+      }).then(function () {
         var req = {
           reporter: reporter,
           logger: reporter.logger,
-          template: { content: 'foo', scripts: [{ shortid: 'a' }, { shortid: 'b' }] }
+          template: { content: 'foo', scripts: [{ shortid: 'a' }, { shortid: 'b' }, { shortid: 'c' }, { shortid: 'd' }] }
         }
         return reporter.scripts.handleBeforeRender(req, {}).then(function () {
-          req.template.content.should.be.eql('ab')
+          req.template.content.should.be.eql('abcd')
           done()
         })
       }).catch(done)
@@ -139,7 +149,7 @@ describe('scripts', function () {
       })
     })
 
-    it('should be able to handle multiple scripts in afterRender', function (done) {
+    it('should be able to handle multiple scripts in afterRender and execute them in order', function (done) {
       reporter.documentStore.collection('scripts').insert({
         content: 'function afterRender(request, response, done) { response.content = \'a\'; done(); }',
         shortid: 'a'
@@ -149,13 +159,23 @@ describe('scripts', function () {
           shortid: 'b'
         })
       }).then(function () {
+        return reporter.documentStore.collection('scripts').insert({
+          content: 'function afterRender(request, response, done) { response.content = new Buffer(response.content).toString() + \'c\'; done(); }',
+          shortid: 'c'
+        })
+      }).then(function () {
+        return reporter.documentStore.collection('scripts').insert({
+          content: 'function afterRender(request, response, done) { response.content = new Buffer(response.content).toString() + \'d\'; done(); }',
+          shortid: 'd'
+        })
+      }).then(function () {
         var req = {
           reporter: reporter,
           logger: reporter.logger,
-          template: { engine: 'none', recipe: 'html', content: 'foo', scripts: [{ shortid: 'a' }, { shortid: 'b' }] }
+          template: { engine: 'none', recipe: 'html', content: 'foo', scripts: [{ shortid: 'a' }, { shortid: 'b' }, { shortid: 'c' }, { shortid: 'd' }] }
         }
         return reporter.render(req, {}).then(function (res) {
-          res.content.toString().should.be.eql('ab')
+          res.content.toString().should.be.eql('abcd')
           done()
         })
       }).catch(done)
@@ -283,7 +303,7 @@ describe('scripts', function () {
       })
     })
 
-    it('should be abble to callback and call reporter.render', function (done) {
+    it('should be able to callback and call reporter.render', function (done) {
       reporter.documentStore.collection('templates').insert({
         name: 'foo',
         content: 'foo',
