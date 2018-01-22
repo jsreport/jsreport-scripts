@@ -1,9 +1,13 @@
 require('should')
 var assert = require('assert')
 var Reporter = require('jsreport-core')
+var createRequest = require('jsreport-core/lib/render/request')
 
 describe('scripts', function () {
   var reporter
+
+  afterEach(() => reporter.close())
+
   describe('scritps with dedicated-process strategy', function () {
     beforeEach(function () {
       reporter = Reporter().use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')({ timeout: 2000 }))
@@ -39,13 +43,11 @@ describe('scripts', function () {
     })
 
     it('should be able to require local functions', function () {
-      var req = {
-        logger: reporter.logger,
-        reporter: reporter,
+      var req = createRequest({
         template: {
           scripts: [{ content: "function beforeRender(done) { request.template.content = require('./helperA')(); done(); }" }]
         }
-      }
+      })
 
       return reporter.scripts.handleBeforeRender(req, {}).then(function (res) {
         req.template.content.should.be.eql('a')
@@ -67,7 +69,7 @@ describe('scripts', function () {
   function prepareRequest (scriptContent) {
     return prepareTemplate(scriptContent).then(function (template) {
       return {
-        request: { template: template, reporter: reporter, options: {}, logger: reporter.logger },
+        request: createRequest({ template: template, options: {} }),
         response: {}
       }
     })
@@ -92,7 +94,7 @@ describe('scripts', function () {
 
   function common () {
     it('should find script by its name', function () {
-      var req = { template: { script: { name: 'foo' } }, reporter: reporter, logger: reporter.logger }
+      var req = createRequest({ template: { script: { name: 'foo' } } })
       var res = {}
 
       return reporter.documentStore.collection('scripts').insert({
@@ -125,11 +127,9 @@ describe('scripts', function () {
           shortid: 'd'
         })
       }).then(function () {
-        var req = {
-          reporter: reporter,
-          logger: reporter.logger,
+        var req = createRequest({
           template: { content: 'foo', scripts: [{ shortid: 'a' }, { shortid: 'b' }, { shortid: 'c' }, { shortid: 'd' }] }
-        }
+        })
         return reporter.scripts.handleBeforeRender(req, {}).then(function () {
           req.template.content.should.be.eql('abcd')
           done()
@@ -138,11 +138,9 @@ describe('scripts', function () {
     })
 
     it('should throw only weak error when script is not found', function () {
-      var req = {
-        reporter: reporter,
-        logger: reporter.logger,
+      var req = createRequest({
         template: { content: 'foo', scripts: [{ shortid: 'a' }] }
-      }
+      })
 
       return reporter.scripts.handleBeforeRender(req, {}).catch(function (e) {
         e.weak.should.be.ok()
@@ -155,25 +153,23 @@ describe('scripts', function () {
         shortid: 'a'
       }).then(function () {
         return reporter.documentStore.collection('scripts').insert({
-          content: 'function afterRender(request, response, done) { response.content = new Buffer(response.content).toString() + \'b\'; done(); }',
+          content: 'function afterRender(request, response, done) { response.content = Buffer.from(response.content).toString() + \'b\'; done(); }',
           shortid: 'b'
         })
       }).then(function () {
         return reporter.documentStore.collection('scripts').insert({
-          content: 'function afterRender(request, response, done) { response.content = new Buffer(response.content).toString() + \'c\'; done(); }',
+          content: 'function afterRender(request, response, done) { response.content = Buffer.from(response.content).toString() + \'c\'; done(); }',
           shortid: 'c'
         })
       }).then(function () {
         return reporter.documentStore.collection('scripts').insert({
-          content: 'function afterRender(request, response, done) { response.content = new Buffer(response.content).toString() + \'d\'; done(); }',
+          content: 'function afterRender(request, response, done) { response.content = Buffer.from(response.content).toString() + \'d\'; done(); }',
           shortid: 'd'
         })
       }).then(function () {
-        var req = {
-          reporter: reporter,
-          logger: reporter.logger,
+        var req = createRequest({
           template: { engine: 'none', recipe: 'html', content: 'foo', scripts: [{ shortid: 'a' }, { shortid: 'b' }, { shortid: 'c' }, { shortid: 'd' }] }
-        }
+        })
         return reporter.render(req, {}).then(function (res) {
           res.content.toString().should.be.eql('abcd')
           done()
@@ -192,11 +188,9 @@ describe('scripts', function () {
           isGlobal: true
         })
       }).then(function () {
-        var req = {
-          reporter: reporter,
-          logger: reporter.logger,
+        var req = createRequest({
           template: { content: '', scripts: [{ shortid: 'a' }] }
-        }
+        })
         return reporter.scripts.handleBeforeRender(req, {}).then(function () {
           req.template.content.should.be.eql('ba')
           done()
@@ -265,7 +259,7 @@ describe('scripts', function () {
     it('should be able to processes afterRender function', function (done) {
       prepareRequest('function afterRender(request, response, done){ response.content[0] = 1; done(); }').then(function (res) {
         return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
-          res.response.content = new Buffer([1])
+          res.response.content = Buffer.from([1])
           return reporter.scripts.handleAfterRender(res.request, res.response).then(function () {
             assert.equal(1, res.response.content[0])
             done()
@@ -277,7 +271,7 @@ describe('scripts', function () {
     it('res.content in afterRender should be buffer', function () {
       return prepareRequest('function afterRender(req, res, done){ if (!Buffer.isBuffer(res.content)) { return done(new Error(\'not a buffer\')) } done(); }').then(function (res) {
         return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
-          res.response.content = new Buffer([1])
+          res.response.content = Buffer.from([1])
           return reporter.scripts.handleAfterRender(res.request, res.response)
         })
       })
@@ -311,7 +305,6 @@ describe('scripts', function () {
         recipe: 'html'
       }).then(function (tmpl) {
         var request = {
-          logger: reporter.logger,
           template: {
             content: 'original',
             recipe: 'html',
@@ -330,7 +323,6 @@ describe('scripts', function () {
 
     it('callback error should be gracefully handled', function () {
       var request = {
-        logger: reporter.logger,
         template: {
           content: 'original',
           recipe: 'html',
@@ -343,7 +335,7 @@ describe('scripts', function () {
       return reporter.render(request).then(function (response) {
         throw new Error('Should have failed.')
       }).catch(function (e) {
-        e.message.should.containEql('template property must')
+        e.message.should.containEql('Template must')
       })
     })
 
@@ -356,13 +348,12 @@ describe('scripts', function () {
       }).then(function (tmpl) {
         var request = {
           template: {
-            logger: reporter.logger,
             content: 'original',
             recipe: 'html',
             engine: 'jsrender',
             script: {
               content: "function beforeRender(request, response, done) { reporter.render({ template: { shortid: '" + tmpl.shortid + "'} }, function(err, resp) { if (err) return done(err); " +
-              'request.template.content = new Buffer(resp.content).toString(); done(); }); };'
+              'request.template.content = Buffer.from(resp.content).toString(); done(); }); };'
             }
           }
         }
@@ -377,14 +368,13 @@ describe('scripts', function () {
       this.timeout(5000)
       reporter.documentStore.collection('templates').insert({
         name: 'foo',
-        logger: reporter.logger,
         content: 'foo',
         engine: 'jsrender',
         recipe: 'html',
         shortid: 'id',
         script: {
           content: "function beforeRender(request, response, done) { reporter.render({ template: { shortid: 'id'} }, function(err, resp) { if (err) return done(err); " +
-          'request.template.content = new Buffer(resp.content).toString(); done(); }); };'
+          'request.template.content = Buffer.from(resp.content).toString(); done(); }); };'
         }
       }).then(function (tmpl) {
         var request = {
@@ -401,7 +391,8 @@ describe('scripts', function () {
       })
     })
 
-    it('should be able to require local scripts', function (done) {
+    it('should be able to require local scripts', async () => {
+      await reporter.close()
       var scriptContent = "function beforeRender(request, response, done) { request.template.content = require('helperA')(); done() }"
       reporter = Reporter({
         scripts: {
@@ -409,18 +400,15 @@ describe('scripts', function () {
         }
       }).use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')())
 
-      reporter.init().then(function () {
-        return prepareRequest(scriptContent)
-          .then(function (res) {
-            return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
-              res.request.template.content.should.be.eql('a')
-              done()
-            })
-          })
-      }).catch(done)
+      await reporter.init()
+      const res = await prepareRequest(scriptContent)
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      res.request.template.content.should.be.eql('a')
     })
 
-    it('should be unblock modules with allowedModules = *', function (done) {
+    it('should be unblock modules with allowedModules = *', async () => {
+      await reporter.close()
+
       var scriptContent = "function beforeRender(request, response, done) { request.template.content = require('helperA')(); done() }"
       reporter = Reporter({
         scripts: {
@@ -428,39 +416,31 @@ describe('scripts', function () {
         }
       }).use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')())
 
-      reporter.init().then(function () {
-        return prepareRequest(scriptContent)
-          .then(function (res) {
-            return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
-              res.request.template.content.should.be.eql('a')
-              done()
-            })
-          })
-      }).catch(done)
+      await reporter.init()
+      const res = await prepareRequest(scriptContent)
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      res.request.template.content.should.be.eql('a')
     })
 
     it('should ignore empty script object', function () {
-      var req = { template: { script: {} }, reporter: reporter, logger: reporter.logger }
+      var req = createRequest({ template: { script: {} }, reporter: reporter })
       var res = {}
 
       return reporter.scripts.handleBeforeRender(req, res)
     })
 
-    it('should be back compatible with single done parameter in beforeRender function', function (done) {
-      prepareRequest("function beforeRender(done) { request.template.content = 'xxx'; done()").then(function (res) {
-        return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
-          assert.equal('xxx', res.request.template.content)
-        })
-      }).finally(done)
+    it('should be back compatible with single done parameter in beforeRender function', async () => {
+      const res = await prepareRequest("function beforeRender(done) { request.template.content = 'xxx'; done() }")
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      assert.equal('xxx', res.request.template.content)
     })
 
-    it('should be back compatible with single done parameter in afterRender function', function (done) {
-      prepareRequest('function afterRender(done) {  response.content[0] = 1; done();').then(function (res) {
-        return reporter.scripts.handleAfterRender(res.request, res.response).then(function () {
-          assert.equal(1, res.response.content[0])
-          done()
-        })
-      }).finally(done)
+    it('should be back compatible with single done parameter in afterRender function', async () => {
+      const res = await prepareRequest('function afterRender(done) {  response.content[0] = 1; done(); }')
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      res.response.content = Buffer.from([1, 2, 3])
+      await reporter.scripts.handleAfterRender(res.request, res.response)
+      assert.equal(1, res.response.content[0])
     })
 
     it('should be possible to declare global request object', function (done) {
@@ -472,16 +452,15 @@ describe('scripts', function () {
       }).catch(done)
     })
 
-    it('should fire beforeScriptListeners', function (done) {
-      prepareRequest('function beforeRender(req, res, done) { done() }').then(function (res) {
-        reporter.beforeScriptListeners.add('test', function (def) {
-          def.script.should.be.ok()
-          done()
-        })
-        return reporter.scripts.handleBeforeRender(res.request, res.response).then(function () {
-
-        })
-      }).catch(done)
+    it('should fire beforeScriptListeners', async () => {
+      const res = await prepareRequest('function beforeRender(req, res, done) { done() }')
+      let called = false
+      reporter.beforeScriptListeners.add('test', (def) => {
+        def.script.should.be.ok()
+        called = true
+      })
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      called.should.be.true()
     })
 
     it('should terminate execution with endless loop after timeout', function (done) {
