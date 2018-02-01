@@ -29,8 +29,7 @@
   "license": "LGPL",
   "dependencies": {
     "bluebird": "3.5.1",
-    "nanoid": "1.0.1",
-    "shortid": "2.2.8"
+    "nanoid": "1.0.1"    
   },
   "author": "Jan Blaha",
   "devDependencies": {
