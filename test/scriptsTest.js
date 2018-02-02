@@ -267,8 +267,8 @@ describe('scripts', () => {
       }
     })
 
-    it('should be able to callback and call reporter.render', async () => {
-      const tmpl = await reporter.documentStore.collection('templates').insert({
+    it('should be able to require jsreport-proxy and render', async () => {
+      await reporter.documentStore.collection('templates').insert({
         name: 'foo',
         content: 'foo',
         engine: 'jsrender',
@@ -280,7 +280,14 @@ describe('scripts', () => {
           recipe: 'html',
           engine: 'jsrender',
           scripts: [{
-            content: "function afterRender(req, res, done) { reporter.render({ template: { shortid: '" + tmpl.shortid + "'} }, function(err, resp) { if (err) return done(err); res.content = resp.content; done(); }); };"
+            content: `
+              const jsreport = require('jsreport-proxy')
+              function afterRender(req, res, done) { 
+                jsreport.render({ template: { name: 'foo' } }).then((resp) => {
+                  res.content = resp.content; 
+                  done(); 
+                }).catch((e) => done(e))
+              }`
           }]
         }
       }
@@ -295,7 +302,14 @@ describe('scripts', () => {
           recipe: 'html',
           engine: 'jsrender',
           scripts: [{
-            content: 'function afterRender(req, res, done) { reporter.render({ }, function(err, resp) { if (err) return done(err); res.content = resp.content; done(); }); };'
+            content: `
+              const jsreport = require('jsreport-proxy')
+              function afterRender(req, res, done) { 
+                jsreport.render({ template: {} }).then((resp) => {
+                  res.content = resp.content; 
+                  done(); 
+                }).catch((e) => done(e))
+              }`
           }]
         }
       }
@@ -308,7 +322,7 @@ describe('scripts', () => {
     })
 
     it('should be able to substitute template with another template using callback', async () => {
-      const tmpl = await reporter.documentStore.collection('templates').insert({
+      await reporter.documentStore.collection('templates').insert({
         name: 'foo',
         content: 'foo',
         engine: 'jsrender',
@@ -321,8 +335,14 @@ describe('scripts', () => {
           recipe: 'html',
           engine: 'jsrender',
           scripts: [{
-            content: "function beforeRender(request, response, done) { reporter.render({ template: { shortid: '" + tmpl.shortid + "'} }, function(err, resp) { if (err) return done(err); " +
-              'request.template.content = Buffer.from(resp.content).toString(); done(); }); };'
+            content: `
+              const jsreport = require('jsreport-proxy')
+              function beforeRender(req, res, done) { 
+                jsreport.render({ template: { name: 'foo' } }).then((resp) => {
+                  req.template.content = Buffer.from(resp.content).toString();
+                  done(); 
+                }).catch((e) => done(e))
+              }`
           }]
         }
       }
@@ -339,8 +359,14 @@ describe('scripts', () => {
         recipe: 'html',
         shortid: 'id',
         scripts: [{
-          content: "function beforeRender(request, response, done) { reporter.render({ template: { shortid: 'id'} }, function(err, resp) { if (err) return done(err); " +
-          'request.template.content = Buffer.from(resp.content).toString(); done(); }); };'
+          content: `
+              const jsreport = require('jsreport-proxy')
+              function beforeRender(req, res, done) { 
+                jsreport.render({ template: { name: 'foo' } }).then((resp) => {
+                  req.template.content = Buffer.from(resp.content).toString();
+                  done(); 
+                }).catch((e) => done(e))
+              }`
         }]
       })
 
