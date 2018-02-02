@@ -66,7 +66,7 @@ describe('scripts', () => {
     const script = await reporter.documentStore.collection('scripts').insert({ content: scriptContent })
     return reporter.documentStore.collection('templates').insert({
       content: 'foo',
-      script: { shortid: script.shortid }
+      scripts: [{ shortid: script.shortid }]
     })
   }
 
@@ -96,7 +96,7 @@ describe('scripts', () => {
 
   function common () {
     it('should find script by its name', async () => {
-      const req = createRequest({ template: { script: { name: 'foo' } } })
+      const req = createRequest({ template: { scripts: [{ name: 'foo' }] } })
       const res = {}
 
       await reporter.documentStore.collection('scripts').insert({
@@ -277,9 +277,9 @@ describe('scripts', () => {
           content: 'original',
           recipe: 'html',
           engine: 'jsrender',
-          script: {
+          scripts: [{
             content: "function afterRender(done) { reporter.render({ template: { shortid: '" + tmpl.shortid + "'} }, function(err, resp) { if (err) return done(err); response.content = resp.content; done(); }); };"
-          }
+          }]
         }
       }
       const response = await reporter.render(request)
@@ -292,9 +292,9 @@ describe('scripts', () => {
           content: 'original',
           recipe: 'html',
           engine: 'jsrender',
-          script: {
+          scripts: [{
             content: 'function afterRender(done) { reporter.render({ }, function(err, resp) { if (err) return done(err); response.content = resp.content; done(); }); };'
-          }
+          }]
         }
       }
       try {
@@ -318,10 +318,10 @@ describe('scripts', () => {
           content: 'original',
           recipe: 'html',
           engine: 'jsrender',
-          script: {
+          scripts: [{
             content: "function beforeRender(request, response, done) { reporter.render({ template: { shortid: '" + tmpl.shortid + "'} }, function(err, resp) { if (err) return done(err); " +
               'request.template.content = Buffer.from(resp.content).toString(); done(); }); };'
-          }
+          }]
         }
       }
       const response = await reporter.render(request)
@@ -336,10 +336,10 @@ describe('scripts', () => {
         engine: 'jsrender',
         recipe: 'html',
         shortid: 'id',
-        script: {
+        scripts: [{
           content: "function beforeRender(request, response, done) { reporter.render({ template: { shortid: 'id'} }, function(err, resp) { if (err) return done(err); " +
           'request.template.content = Buffer.from(resp.content).toString(); done(); }); };'
-        }
+        }]
       })
 
       const request = {
@@ -385,13 +385,6 @@ describe('scripts', () => {
       const res = await prepareRequest(scriptContent)
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.template.content.should.be.eql('a')
-    })
-
-    it('should ignore empty script object', () => {
-      const req = createRequest({ template: { script: {} }, reporter: reporter })
-      const res = {}
-
-      return reporter.scripts.handleBeforeRender(req, res)
     })
 
     it('should be back compatible with single done parameter in beforeRender function', async () => {
