@@ -477,5 +477,30 @@ describe('scripts', () => {
         e.message.should.not.be.eql('should have failed')
       }
     })
+
+    it('should support returning promise from beforeRender', async () => {
+      const res = await prepareRequest("function beforeRender(req, res) { return new Promise((resolve) => { req.data = 'xxx'; resolve() }) }")
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      res.request.data.should.be.eql('xxx')
+    })
+
+    it('should support returning promise from afterRender', async () => {
+      const res = await prepareRequest("function afterRender(req, res) { return new Promise((resolve) => { res.content = Buffer.from('foo'); resolve() }) }")
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      await reporter.scripts.handleAfterRender(res.request, res.response)
+      res.response.content.toString().should.be.eql('foo')
+    })
+
+    it('should support resolve void result from beforeRender when no done parameter is accepted', async () => {
+      const res = await prepareRequest("function beforeRender(req, res) { req.template.content = 'foo' }")
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      res.request.template.content.should.be.eql('foo')
+    })
+
+    it('should support async beforeRender', async () => {
+      const res = await prepareRequest("async function beforeRender(req, res) { await new Promise((resolve) => { req.data = 'xxx'; resolve() }) }")
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      res.request.data.should.be.eql('xxx')
+    })
   }
 })
