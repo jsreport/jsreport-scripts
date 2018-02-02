@@ -51,7 +51,7 @@ describe('scripts', () => {
     it('should be able to require local functions', async () => {
       const req = createRequest({
         template: {
-          scripts: [{ content: "function beforeRender(done) { request.template.content = require('./helperA')(); done(); }" }]
+          scripts: [{ content: "function beforeRender(req, res, done) { req.template.content = require('./helperA')(); done(); }" }]
         }
       })
 
@@ -80,7 +80,7 @@ describe('scripts', () => {
 
   function commonSafe () {
     it('should propagate exception from async back', async () => {
-      const res = await prepareRequest('setTimeout(function() { foo; }, 0);')
+      const res = await prepareRequest(`function beforeRender(req, res, done) { setTimeout(function() { foo; }, 0); }`)
       try {
         await reporter.scripts.handleBeforeRender(res.request, res.response)
         throw new Error('Should have fail')
@@ -100,7 +100,7 @@ describe('scripts', () => {
       const res = {}
 
       await reporter.documentStore.collection('scripts').insert({
-        content: "request.template.content = 'xxx'; done()",
+        content: `function beforeRender(req, res, done) { req.template.content = 'xxx'; done() }`,
         name: 'foo'
       })
 
@@ -189,26 +189,28 @@ describe('scripts', () => {
     })
 
     it('should be able to modify request.data', async () => {
-      const res = await prepareRequest("request.data = 'xxx'; done()")
+      const res = await prepareRequest(`function beforeRender(req, res, done) { req.data = 'xxx'; done() } `)
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.data.should.be.eql('xxx')
     })
 
     it('should be able to modify complex request.data', async () => {
-      const res = await prepareRequest("request.data = { a: 'xxx' }; done()")
+      const res = await prepareRequest(`function beforeRender(req, res, done) { req.data = { a: 'xxx' }; done() }`)
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.data.a.should.be.eql('xxx')
     })
 
     it('should be able to modify request.template.content', async () => {
-      const res = await prepareRequest("request.template.content = 'xxx'; done()")
+      const res = await prepareRequest(`function beforeRender(req, res, done) { req.template.content = 'xxx'; done() }`)
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.template.content.should.be.eql('xxx')
     })
 
     it('should not be able to read local files', async () => {
-      const scriptContent = "var fs = require('fs'); " +
-        "fs.readdir('d:\\', function(err, files) { response.filesLength = files.length; done(); });"
+      const scriptContent = `function beforeRender(req, res, cone) {
+         var fs = require('fs');
+        fs.readdir('d:\\', function(err, files) { response.filesLength = files.length; done(); });
+      }`
 
       const res = await prepareRequest(scriptContent)
       try {
@@ -222,7 +224,7 @@ describe('scripts', () => {
     })
 
     it('should be able to processes async function', async () => {
-      const res = await prepareRequest("setTimeout(function(){ request.template.content = 'xxx'; done(); }, 10);")
+      const res = await prepareRequest(`function beforeRender(req, res, done) { setTimeout(function(){ req.template.content = 'xxx'; done(); }, 10); }`)
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.template.content.should.be.eql('xxx')
     })
@@ -249,13 +251,13 @@ describe('scripts', () => {
     })
 
     it('should be able to add property to request', async () => {
-      const res = await prepareRequest("request.foo = 'xxx'; done(); ")
+      const res = await prepareRequest(`function beforeRender(req, res, done) { req.foo = 'xxx'; done(); } `)
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.foo.should.be.eql('xxx')
     })
 
     it('should be able to cancel request', async () => {
-      const res = await prepareRequest('request.cancel();')
+      const res = await prepareRequest(`function beforeRender(req, res, done) { req.cancel(); } `)
       try {
         await reporter.scripts.handleBeforeRender(res.request, res.response)
         throw new Error('Should have failed')
@@ -278,7 +280,7 @@ describe('scripts', () => {
           recipe: 'html',
           engine: 'jsrender',
           scripts: [{
-            content: "function afterRender(done) { reporter.render({ template: { shortid: '" + tmpl.shortid + "'} }, function(err, resp) { if (err) return done(err); response.content = resp.content; done(); }); };"
+            content: "function afterRender(req, res, done) { reporter.render({ template: { shortid: '" + tmpl.shortid + "'} }, function(err, resp) { if (err) return done(err); res.content = resp.content; done(); }); };"
           }]
         }
       }
@@ -293,7 +295,7 @@ describe('scripts', () => {
           recipe: 'html',
           engine: 'jsrender',
           scripts: [{
-            content: 'function afterRender(done) { reporter.render({ }, function(err, resp) { if (err) return done(err); response.content = resp.content; done(); }); };'
+            content: 'function afterRender(req, res, done) { reporter.render({ }, function(err, resp) { if (err) return done(err); res.content = resp.content; done(); }); };'
           }]
         }
       }
@@ -385,20 +387,6 @@ describe('scripts', () => {
       const res = await prepareRequest(scriptContent)
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.template.content.should.be.eql('a')
-    })
-
-    it('should be back compatible with single done parameter in beforeRender function', async () => {
-      const res = await prepareRequest("function beforeRender(done) { request.template.content = 'xxx'; done() }")
-      await reporter.scripts.handleBeforeRender(res.request, res.response)
-      res.request.template.content.should.be.eql('xxx')
-    })
-
-    it('should be back compatible with single done parameter in afterRender function', async () => {
-      const res = await prepareRequest('function afterRender(done) {  response.content[0] = 1; done(); }')
-      await reporter.scripts.handleBeforeRender(res.request, res.response)
-      res.response.content = Buffer.from([1, 2, 3])
-      await reporter.scripts.handleAfterRender(res.request, res.response)
-      res.response.content[0].should.be.eql(1)
     })
 
     it('should be possible to declare global request object', async () => {
