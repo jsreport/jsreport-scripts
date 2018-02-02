@@ -295,6 +295,42 @@ describe('scripts', () => {
       response.content.toString().should.be.eql('foo')
     })
 
+    it('should be able to require jsreport-proxy and query collection', async () => {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: 'foo',
+        engine: 'jsrender',
+        recipe: 'html'
+      })
+
+      await reporter.documentStore.collection('templates').insert({
+        name: 'hello',
+        content: 'hello',
+        engine: 'jsrender',
+        recipe: 'html'
+      })
+
+      const request = {
+        template: {
+          content: 'original',
+          recipe: 'html',
+          engine: 'jsrender',
+          scripts: [{
+            content: `
+              const jsreport = require('jsreport-proxy')
+              function beforeRender(req, res, done) { 
+                jsreport.documentStore.collection('templates').find({name: 'hello'}).then((result) => {
+                  req.template.content = result[0].content
+                  done(); 
+                }).catch((e) => done(e))
+              }`
+          }]
+        }
+      }
+      const response = await reporter.render(request)
+      response.content.toString().should.be.eql('hello')
+    })
+
     it('callback error should be gracefully handled', async () => {
       const request = {
         template: {
