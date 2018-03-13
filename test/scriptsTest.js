@@ -502,5 +502,21 @@ describe('scripts', () => {
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.data.should.be.eql('xxx')
     })
+
+    it('should write console.log to the logger', async () => {
+      const res = await prepareRequest("function beforeRender(req, res) { console.log('foo') }")
+      let logged
+      reporter.logger.debug = (msg) => (logged = msg === 'foo')
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      logged.should.be.true()
+    })
+
+    it('should dump objects to logger from console.log', async () => {
+      const res = await prepareRequest('function beforeRender(req, res) { console.log({a: 1}) }')
+      let logged
+      reporter.logger.debug = (msg) => (logged = msg === '{ a: 1 }')
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      logged.should.be.true()
+    })
   }
 })
