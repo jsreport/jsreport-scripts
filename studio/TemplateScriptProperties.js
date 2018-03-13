@@ -1,4 +1,7 @@
 import React, { Component } from 'react'
+import Studio from 'jsreport-studio'
+
+const MultiSelect = Studio.MultiSelect
 
 export default class TemplateScriptProperties extends Component {
   selectScripts (entities) {
@@ -58,18 +61,20 @@ export default class TemplateScriptProperties extends Component {
     const { entity, entities, onChange } = this.props
     const scripts = this.selectScripts(entities)
 
-    const selectValues = (event, ascripts) => {
-      const el = event.target
+    const selectValues = (selectData, ascripts) => {
+      const { value: selectedValue, options } = selectData
       let scripts = Object.assign([], ascripts)
 
-      for (var i = 0; i < el.options.length; i++) {
-        if (el.options[i].selected) {
-          if (!scripts.filter((s) => s.shortid === el.options[i].value).length) {
-            scripts.push({ shortid: el.options[i].value })
+      for (var i = 0; i < options.length; i++) {
+        const optionsIsSelected = selectedValue.indexOf(options[i].value) !== -1
+
+        if (optionsIsSelected) {
+          if (!scripts.filter((s) => s.shortid === options[i].value).length) {
+            scripts.push({ shortid: options[i].value })
           }
         } else {
-          if (scripts.filter((s) => s.shortid === el.options[i].value).length) {
-            scripts = scripts.filter((s) => s.shortid !== el.options[i].value)
+          if (scripts.filter((s) => s.shortid === options[i].value).length) {
+            scripts = scripts.filter((s) => s.shortid !== options[i].value)
           }
         }
       }
@@ -80,12 +85,13 @@ export default class TemplateScriptProperties extends Component {
     return (
       <div className='properties-section'>
         <div className='form-group'>
-          <select
-            title='Use CTRL to deselect item and also to select multiple options. The order of selected scripts is reflected on the server'
-            multiple size='7' value={entity.scripts ? entity.scripts.map((s) => s.shortid) : []}
-            onChange={(v) => onChange({_id: entity._id, scripts: selectValues(v, entity.scripts)})}>
-            {scripts.map((s) => <option key={s.shortid} value={s.shortid}>{s.name}</option>)}
-          </select>
+          <MultiSelect
+            title='Use the checkboxes to select/deselect multiple options. The order of selected scripts is reflected on the server'
+            size={7}
+            value={entity.scripts ? entity.scripts.map((s) => s.shortid) : []}
+            onChange={(selectData) => onChange({ _id: entity._id, scripts: selectValues(selectData, entity.scripts) })}
+            options={scripts.map(s => ({ key: s.shortid, name: s.name, value: s.shortid }))}
+          />
           {(entity.scripts && entity.scripts.length) ? <div><span>Run order:</span>{this.renderOrder()}</div> : <div />}
         </div>
       </div>
