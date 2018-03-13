@@ -66,9 +66,9 @@ export default class TemplateScriptProperties extends Component {
       let scripts = Object.assign([], ascripts)
 
       for (var i = 0; i < options.length; i++) {
-        const optionsIsSelected = selectedValue.indexOf(options[i].value) !== -1
+        const optionIsSelected = selectedValue.indexOf(options[i].value) !== -1
 
-        if (optionsIsSelected) {
+        if (optionIsSelected) {
           if (!scripts.filter((s) => s.shortid === options[i].value).length) {
             scripts.push({ shortid: options[i].value })
           }
