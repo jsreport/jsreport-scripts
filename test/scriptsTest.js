@@ -63,9 +63,12 @@ describe('scripts', () => {
   })
 
   async function prepareTemplate (scriptContent) {
-    const script = await reporter.documentStore.collection('scripts').insert({ content: scriptContent })
+    const script = await reporter.documentStore.collection('scripts').insert({ content: scriptContent, name: 'foo' })
     return reporter.documentStore.collection('templates').insert({
       content: 'foo',
+      name: 'foo',
+      engine: 'none',
+      recipe: 'html',
       scripts: [{ shortid: script.shortid }]
     })
   }
@@ -110,20 +113,24 @@ describe('scripts', () => {
 
     it('should be able to handle multiple scripts in handleBeforeRender and execute them in order', async () => {
       await reporter.documentStore.collection('scripts').insert({
+        name: 'a',
         content: 'function beforeRender(request, response, done) { request.template.content = \'a\'; done(); }',
         shortid: 'a'
       })
       await reporter.documentStore.collection('scripts').insert({
         content: 'function beforeRender(request, response, done) { request.template.content += \'b\'; done(); }',
-        shortid: 'b'
+        shortid: 'b',
+        name: 'b'
       })
       await reporter.documentStore.collection('scripts').insert({
         content: 'function beforeRender(request, response, done) { request.template.content += \'c\'; done(); }',
-        shortid: 'c'
+        shortid: 'c',
+        name: 'c'
       })
       await reporter.documentStore.collection('scripts').insert({
         content: 'function beforeRender(request, response, done) { request.template.content += \'d\'; done(); }',
-        shortid: 'd'
+        shortid: 'd',
+        name: 'd'
       })
 
       const req = createRequest({
@@ -147,19 +154,23 @@ describe('scripts', () => {
 
     it('should be able to handle multiple scripts in afterRender and execute them in order', async () => {
       await reporter.documentStore.collection('scripts').insert({
+        name: 'a',
         content: 'function afterRender(request, response, done) { response.content = \'a\'; done(); }',
         shortid: 'a'
       })
       await reporter.documentStore.collection('scripts').insert({
         content: 'function afterRender(request, response, done) { response.content = Buffer.from(response.content).toString() + \'b\'; done(); }',
+        name: 'b',
         shortid: 'b'
       })
       await reporter.documentStore.collection('scripts').insert({
         content: 'function afterRender(request, response, done) { response.content = Buffer.from(response.content).toString() + \'c\'; done(); }',
+        name: 'c',
         shortid: 'c'
       })
       await reporter.documentStore.collection('scripts').insert({
         content: 'function afterRender(request, response, done) { response.content = Buffer.from(response.content).toString() + \'d\'; done(); }',
+        name: 'd',
         shortid: 'd'
       })
 
@@ -173,10 +184,12 @@ describe('scripts', () => {
     it('should prepend global scripts in beforeRender', async () => {
       await reporter.documentStore.collection('scripts').insert({
         content: 'function beforeRender(request, response, done) { request.template.content += \'a\'; done(); }',
+        name: 'a',
         shortid: 'a'
       })
       await reporter.documentStore.collection('scripts').insert({
         content: 'function beforeRender(request, response, done) { request.template.content += \'b\'; done(); }',
+        name: 'b',
         shortid: 'b',
         isGlobal: true
       })
