@@ -208,6 +208,10 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
+	var _jsreportStudio = __webpack_require__(3);
+	
+	var _jsreportStudio2 = _interopRequireDefault(_jsreportStudio);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -215,6 +219,8 @@
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 	
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var MultiSelect = _jsreportStudio2.default.MultiSelect;
 	
 	var TemplateScriptProperties = function (_Component) {
 	  _inherits(TemplateScriptProperties, _Component);
@@ -294,23 +300,27 @@
 	
 	      var scripts = this.selectScripts(entities);
 	
-	      var selectValues = function selectValues(event, ascripts) {
-	        var el = event.target;
+	      var selectValues = function selectValues(selectData, ascripts) {
+	        var selectedValue = selectData.value,
+	            options = selectData.options;
+	
 	        var scripts = Object.assign([], ascripts);
 	
-	        for (var i = 0; i < el.options.length; i++) {
-	          if (el.options[i].selected) {
+	        for (var i = 0; i < options.length; i++) {
+	          var optionsIsSelected = selectedValue.indexOf(options[i].value) !== -1;
+	
+	          if (optionsIsSelected) {
 	            if (!scripts.filter(function (s) {
-	              return s.shortid === el.options[i].value;
+	              return s.shortid === options[i].value;
 	            }).length) {
-	              scripts.push({ shortid: el.options[i].value });
+	              scripts.push({ shortid: options[i].value });
 	            }
 	          } else {
 	            if (scripts.filter(function (s) {
-	              return s.shortid === el.options[i].value;
+	              return s.shortid === options[i].value;
 	            }).length) {
 	              scripts = scripts.filter(function (s) {
-	                return s.shortid !== el.options[i].value;
+	                return s.shortid !== options[i].value;
 	              });
 	            }
 	          }
@@ -325,24 +335,19 @@
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'form-group' },
-	          _react2.default.createElement(
-	            'select',
-	            {
-	              title: 'Use CTRL to deselect item and also to select multiple options. The order of selected scripts is reflected on the server',
-	              multiple: true, size: '7', value: entity.scripts ? entity.scripts.map(function (s) {
-	                return s.shortid;
-	              }) : [],
-	              onChange: function onChange(v) {
-	                return _onChange({ _id: entity._id, scripts: selectValues(v, entity.scripts) });
-	              } },
-	            scripts.map(function (s) {
-	              return _react2.default.createElement(
-	                'option',
-	                { key: s.shortid, value: s.shortid },
-	                s.name
-	              );
+	          _react2.default.createElement(MultiSelect, {
+	            title: 'Use the checkboxes to select/deselect multiple options. The order of selected scripts is reflected on the server',
+	            size: 7,
+	            value: entity.scripts ? entity.scripts.map(function (s) {
+	              return s.shortid;
+	            }) : [],
+	            onChange: function onChange(selectData) {
+	              return _onChange({ _id: entity._id, scripts: selectValues(selectData, entity.scripts) });
+	            },
+	            options: scripts.map(function (s) {
+	              return { key: s.shortid, name: s.name, value: s.shortid };
 	            })
-	          ),
+	          }),
 	          entity.scripts && entity.scripts.length ? _react2.default.createElement(
 	            'div',
 	            null,
