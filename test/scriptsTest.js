@@ -308,7 +308,7 @@ describe('scripts', () => {
       response.content.toString().should.be.eql('foo')
     })
 
-    it('should be able to require jsreport-proxy and query collection', async () => {
+    it('should be able to require jsreport-proxy and find collection', async () => {
       await reporter.documentStore.collection('templates').insert({
         name: 'foo',
         content: 'foo',
@@ -334,6 +334,42 @@ describe('scripts', () => {
               function beforeRender(req, res, done) { 
                 jsreport.documentStore.collection('templates').find({name: 'hello'}).then((result) => {
                   req.template.content = result[0].content
+                  done(); 
+                }).catch((e) => done(e))
+              }`
+          }]
+        }
+      }
+      const response = await reporter.render(request)
+      response.content.toString().should.be.eql('hello')
+    })
+
+    it('should be able to require jsreport-proxy and findOne collection', async () => {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: 'foo',
+        engine: 'jsrender',
+        recipe: 'html'
+      })
+
+      await reporter.documentStore.collection('templates').insert({
+        name: 'hello',
+        content: 'hello',
+        engine: 'jsrender',
+        recipe: 'html'
+      })
+
+      const request = {
+        template: {
+          content: 'original',
+          recipe: 'html',
+          engine: 'jsrender',
+          scripts: [{
+            content: `
+              const jsreport = require('jsreport-proxy')
+              function beforeRender(req, res, done) { 
+                jsreport.documentStore.collection('templates').findOne({name: 'hello'}).then((result) => {
+                  req.template.content = result.content
                   done(); 
                 }).catch((e) => done(e))
               }`
