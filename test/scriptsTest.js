@@ -264,9 +264,9 @@ describe('scripts', () => {
     })
 
     it('should be able to add property to request', async () => {
-      const res = await prepareRequest(`function beforeRender(req, res, done) { req.foo = 'xxx'; done(); } `)
+      const res = await prepareRequest(`function beforeRender(req, res, done) { req.context.foo = 'xxx'; done(); } `)
       await reporter.scripts.handleBeforeRender(res.request, res.response)
-      res.request.foo.should.be.eql('xxx')
+      res.request.context.foo.should.be.eql('xxx')
     })
 
     it('should be able to cancel request', async () => {
