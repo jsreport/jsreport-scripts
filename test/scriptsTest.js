@@ -12,7 +12,7 @@ describe('scripts', () => {
       reporter = Reporter()
         .use(require('jsreport-templates')())
         .use(require('jsreport-jsrender')())
-        .use(require('../')({ timeout: 2000 }))
+        .use(require('../')({ timeout: 3000 }))
       return reporter.init()
     })
 
@@ -446,11 +446,9 @@ describe('scripts', () => {
         scripts: [{
           content: `
               const jsreport = require('jsreport-proxy')
-              function beforeRender(req, res, done) { 
-                jsreport.render({ template: { name: 'foo' } }).then((resp) => {
-                  req.template.content = Buffer.from(resp.content).toString();
-                  done(); 
-                }).catch((e) => done(e))
+              async function beforeRender(req, res) { 
+                const resp = await jsreport.render({ template: { name: 'foo' } })
+                req.template.content = Buffer.from(resp.content).toString();                                  
               }`
         }]
       })
