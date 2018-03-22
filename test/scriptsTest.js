@@ -177,7 +177,8 @@ describe('scripts', () => {
       const req = createRequest({
         template: { engine: 'none', recipe: 'html', content: 'foo', scripts: [{ shortid: 'a' }, { shortid: 'b' }, { shortid: 'c' }, { shortid: 'd' }] }
       })
-      const res = await reporter.render(req, {})
+
+      const res = await reporter.render(req)
       res.content.toString().should.be.eql('abcd')
     })
 
@@ -295,10 +296,10 @@ describe('scripts', () => {
           scripts: [{
             content: `
               const jsreport = require('jsreport-proxy')
-              function afterRender(req, res, done) { 
+              function afterRender(req, res, done) {
                 jsreport.render({ template: { name: 'foo' } }).then((resp) => {
-                  res.content = resp.content; 
-                  done(); 
+                  res.content = resp.content;
+                  done();
                 }).catch((e) => done(e))
               }`
           }]
@@ -331,10 +332,10 @@ describe('scripts', () => {
           scripts: [{
             content: `
               const jsreport = require('jsreport-proxy')
-              function beforeRender(req, res, done) { 
+              function beforeRender(req, res, done) {
                 jsreport.documentStore.collection('templates').find({name: 'hello'}).then((result) => {
                   req.template.content = result[0].content
-                  done(); 
+                  done();
                 }).catch((e) => done(e))
               }`
           }]
@@ -367,10 +368,10 @@ describe('scripts', () => {
           scripts: [{
             content: `
               const jsreport = require('jsreport-proxy')
-              function beforeRender(req, res, done) { 
+              function beforeRender(req, res, done) {
                 jsreport.documentStore.collection('templates').findOne({name: 'hello'}).then((result) => {
                   req.template.content = result.content
-                  done(); 
+                  done();
                 }).catch((e) => done(e))
               }`
           }]
@@ -389,10 +390,10 @@ describe('scripts', () => {
           scripts: [{
             content: `
               const jsreport = require('jsreport-proxy')
-              function afterRender(req, res, done) { 
+              function afterRender(req, res, done) {
                 jsreport.render({ template: {} }).then((resp) => {
-                  res.content = resp.content; 
-                  done(); 
+                  res.content = resp.content;
+                  done();
                 }).catch((e) => done(e))
               }`
           }]
@@ -422,10 +423,10 @@ describe('scripts', () => {
           scripts: [{
             content: `
               const jsreport = require('jsreport-proxy')
-              function beforeRender(req, res, done) { 
+              function beforeRender(req, res, done) {
                 jsreport.render({ template: { name: 'foo' } }).then((resp) => {
                   req.template.content = Buffer.from(resp.content).toString();
-                  done(); 
+                  done();
                 }).catch((e) => done(e))
               }`
           }]
@@ -446,9 +447,9 @@ describe('scripts', () => {
         scripts: [{
           content: `
               const jsreport = require('jsreport-proxy')
-              async function beforeRender(req, res) { 
+              async function beforeRender(req, res) {
                 const resp = await jsreport.render({ template: { name: 'foo' } })
-                req.template.content = Buffer.from(resp.content).toString();                                  
+                req.template.content = Buffer.from(resp.content).toString();
               }`
         }]
       })
