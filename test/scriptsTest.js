@@ -23,7 +23,7 @@ describe('scripts', () => {
   describe('scritps with http-server strategy', () => {
     beforeEach(() => {
       reporter = Reporter({
-        tasks: { strategy: 'http-server' }
+        templatingEngines: { strategy: 'http-server' }
       }).use(require('jsreport-templates')())
         .use(require('jsreport-jsrender')())
         .use(require('../')({ timeout: 2000 }))
@@ -37,10 +37,12 @@ describe('scripts', () => {
   describe('scritps with in-process strategy', () => {
     beforeEach(() => {
       reporter = Reporter({
-        tasks: { strategy: 'in-process' },
-        scripts: {
-          allowedModules: ['./helperA', 'underscore'],
-          timeout: 2000
+        templatingEngines: { strategy: 'in-process' },
+        extensions: {
+          scripts: {
+            allowedModules: ['./helperA', 'underscore'],
+            timeout: 2000
+          }
         }
       }).use(require('jsreport-templates')())
         .use(require('jsreport-jsrender')())
@@ -472,8 +474,10 @@ describe('scripts', () => {
       await reporter.close()
       const scriptContent = "function beforeRender(request, response, done) { request.template.content = require('helperA')(); done() }"
       reporter = Reporter({
-        scripts: {
-          allowedModules: ['helperA']
+        extensions: {
+          scripts: {
+            allowedModules: ['helperA']
+          }
         }
       }).use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')())
 
@@ -488,8 +492,10 @@ describe('scripts', () => {
 
       const scriptContent = "function beforeRender(request, response, done) { request.template.content = require('helperA')(); done() }"
       reporter = Reporter({
-        scripts: {
-          allowedModules: '*'
+        extensions: {
+          scripts: {
+            allowedModules: '*'
+          }
         }
       }).use(require('jsreport-templates')()).use(require('jsreport-jsrender')()).use(require('../')())
 
