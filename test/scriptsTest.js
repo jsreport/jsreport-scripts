@@ -470,6 +470,78 @@ describe('scripts', () => {
       }
     })
 
+    it('should fail with script that tries to avoid sandbox (using global context)', async function () {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: 'foo',
+        engine: 'jsrender',
+        recipe: 'html',
+        shortid: 'id',
+        scripts: [{
+          content: `
+              function beforeRender(req, res, done) {
+                const ForeignFunction = this.constructor.constructor;
+                const process1 = ForeignFunction("return process")();
+                const require1 = process1.mainModule.require;
+                const console1 = require1("console");
+                const fs1 = require1("fs");
+                console1.log(fs1.statSync('.'))
+                done()
+              }
+          `
+        }]
+      })
+
+      const request = {
+        template: {
+          shortid: 'id'
+        }
+      }
+
+      try {
+        await reporter.render(request)
+        throw new Error('It should have failed')
+      } catch (e) {
+        e.message.should.containEql('is not defined')
+      }
+    })
+
+    it('should fail with script that tries to avoid sandbox (using objects exposed in global context)', async function () {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: 'foo',
+        engine: 'jsrender',
+        recipe: 'html',
+        shortid: 'id',
+        scripts: [{
+          content: `
+              function beforeRender(req, res, done) {
+                const ForeignFunction = require.constructor
+                const process1 = ForeignFunction("return process")()
+                const require1 = process1.mainModule.require;
+                const console1 = require1("console");
+                const fs1 = require1("fs");
+                console1.log(fs1.statSync('.'))
+                done()
+              }
+          `
+        }]
+      })
+
+      const request = {
+        template: {
+          shortid: 'id'
+        }
+      }
+
+      try {
+        await reporter.render(request)
+        throw new Error('It should have failed')
+      } catch (e) {
+        e.message.should.containEql('is not defined')
+      }
+    })
+
     it('should be able to require local scripts', async () => {
       await reporter.close()
       const scriptContent = "function beforeRender(request, response, done) { request.template.content = require('helperA')(); done() }"
