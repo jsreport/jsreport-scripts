@@ -29,6 +29,7 @@
   "license": "LGPL",
   "dependencies": {
     "bluebird": "3.5.1",
+    "lodash.omit": "4.5.0",
     "nanoid": "1.0.1"
   },
   "author": "Jan Blaha",
