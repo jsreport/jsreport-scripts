@@ -215,11 +215,12 @@ describe('scripts', () => {
         }
 
         function afterRender(req, res, done) {
-          req.data = req.data || {}
-          req.data.afterRender = {}
-          req.data.afterRender.haveParsedScripts = req.context._parsedScripts != null
-          req.data.afterRender.willRunAfterRender = req.context.shouldRunAfterRender === true
-          res.content = ''
+          res.content = JSON.stringify({
+            afterRender: {
+              haveParsedScripts: req.context._parsedScripts != null,
+              willRunAfterRender: req.context.shouldRunAfterRender === true
+            }
+          })
           done()
         }
       `)
@@ -229,8 +230,11 @@ describe('scripts', () => {
 
       res.request.data.beforeRender.haveParsedScripts.should.be.false()
       res.request.data.beforeRender.willRunAfterRender.should.be.false()
-      res.request.data.afterRender.haveParsedScripts.should.be.false()
-      res.request.data.afterRender.willRunAfterRender.should.be.false()
+
+      const resContent = JSON.parse(res.response.content.toString())
+
+      resContent.afterRender.haveParsedScripts.should.be.false()
+      resContent.afterRender.willRunAfterRender.should.be.false()
     })
 
     it('should be able to modify request.data', async () => {
