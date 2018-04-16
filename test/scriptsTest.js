@@ -677,5 +677,14 @@ describe('scripts', () => {
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       logged.should.be.true()
     })
+
+    it('should fail with proper Error', async () => {
+      const res = await prepareRequest(`function beforeRender(req, res, done) { done(new Error('foo')) } `)
+      try {
+        await reporter.scripts.handleBeforeRender(res.request, res.response)
+      } catch (e) {
+        e.should.be.Error()
+      }
+    })
   }
 })
