@@ -7,7 +7,7 @@ describe('scripts', () => {
 
   afterEach(() => reporter.close())
 
-  describe('scritps with dedicated-process strategy', () => {
+  describe('scripts with dedicated-process strategy', () => {
     beforeEach(() => {
       reporter = Reporter()
         .use(require('jsreport-templates')())
@@ -20,7 +20,7 @@ describe('scripts', () => {
     commonSafe()
   })
 
-  describe('scritps with http-server strategy', () => {
+  describe('scripts with http-server strategy', () => {
     beforeEach(() => {
       reporter = Reporter({
         templatingEngines: { strategy: 'http-server' }
@@ -34,7 +34,7 @@ describe('scripts', () => {
     commonSafe()
   })
 
-  describe('scritps with in-process strategy', () => {
+  describe('scripts with in-process strategy', () => {
     beforeEach(() => {
       reporter = Reporter({
         templatingEngines: { strategy: 'in-process' },
@@ -202,6 +202,29 @@ describe('scripts', () => {
       })
       await reporter.scripts.handleBeforeRender(req, {})
       req.template.content.should.be.eql('ba')
+    })
+
+    it('should not be able to see internal context data in scripts', async () => {
+      const res = await prepareRequest(`
+        function beforeRender(req, res, done) {
+          req.data = req.data || {}
+          req.data.beforeRender = {}
+          req.data.beforeRender.haveParsedScripts = req.context._parsedScripts != null
+          req.data.beforeRender.willRunAfterRender = req.context.shouldRunAfterRender === true
+          done()
+        }
+
+        function afterRender(req, res, done) {
+          req.data = req.data || {}
+          req.data.afterRender = {}
+          req.data.afterRender.haveParsedScripts = req.context._parsedScripts != null
+          req.data.afterRender.willRunAfterRender = req.context.shouldRunAfterRender === true
+          done()
+        }
+      `)
+
+      await reporter.scripts.handleBeforeRender(res.request, res.response)
+      res.request.data.beforeRender.haveParsedScripts.should.be.false()
     })
 
     it('should be able to modify request.data', async () => {
