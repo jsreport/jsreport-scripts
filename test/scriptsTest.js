@@ -219,12 +219,18 @@ describe('scripts', () => {
           req.data.afterRender = {}
           req.data.afterRender.haveParsedScripts = req.context._parsedScripts != null
           req.data.afterRender.willRunAfterRender = req.context.shouldRunAfterRender === true
+          res.content = ''
           done()
         }
       `)
 
       await reporter.scripts.handleBeforeRender(res.request, res.response)
+      await reporter.scripts.handleAfterRender(res.request, res.response)
+
       res.request.data.beforeRender.haveParsedScripts.should.be.false()
+      res.request.data.beforeRender.willRunAfterRender.should.be.false()
+      res.request.data.afterRender.haveParsedScripts.should.be.false()
+      res.request.data.afterRender.willRunAfterRender.should.be.false()
     })
 
     it('should be able to modify request.data', async () => {
