@@ -1,7 +1,7 @@
-var main = require('./lib/scripts.js')
-var config = require('./jsreport.config.js')
+const main = require('./lib/scripts.js')
+const config = require('./jsreport.config.js')
 
-module.exports = function (options) {
+module.exports = (options) => {
   config.options = options
   config.main = main
   config.directory = __dirname
