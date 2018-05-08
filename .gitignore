@@ -29,6 +29,6 @@ node_modules
 .idea
 
 # temporary include the build file
-# studio/main.js
+studio/main.js
 studio/main.js.map
 .vscode
