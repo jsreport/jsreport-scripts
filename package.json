@@ -38,10 +38,10 @@
     "eslint-config-standard-jsx": "5.0.0",
     "eslint-plugin-babel": "5.1.0",
     "in-publish": "2.0.0",
-    "jsreport-core": "github:jsreport/jsreport-core#2.0.0-beta",
-    "jsreport-jsrender": "github:jsreport/jsreport-jsrender#2.0.0-beta",
+    "jsreport-core": "2.0.0",
+    "jsreport-jsrender": "2.0.0",
     "jsreport-studio-dev": "1.1.2",
-    "jsreport-templates": "github:jsreport/jsreport-templates#2.0.0-beta",
+    "jsreport-templates": "2.0.0",
     "mocha": "5.1.1",
     "should": "13.2.1",
     "standard": "11.0.1"
