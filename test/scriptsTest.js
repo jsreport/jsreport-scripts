@@ -11,6 +11,7 @@ describe('scripts', () => {
     beforeEach(() => {
       reporter = Reporter()
         .use(require('jsreport-templates')())
+        .use(require('jsreport-assets')())
         .use(require('jsreport-jsrender')())
         .use(require('../')({ timeout: 3000 }))
       return reporter.init()
@@ -26,6 +27,7 @@ describe('scripts', () => {
         templatingEngines: { strategy: 'http-server' }
       }).use(require('jsreport-templates')())
         .use(require('jsreport-jsrender')())
+        .use(require('jsreport-assets')())
         .use(require('../')({ timeout: 2000 }))
       return reporter.init()
     })
@@ -46,6 +48,7 @@ describe('scripts', () => {
         }
       }).use(require('jsreport-templates')())
         .use(require('jsreport-jsrender')())
+        .use(require('jsreport-assets')())
         .use(require('../')())
       return reporter.init()
     })
@@ -414,6 +417,74 @@ describe('scripts', () => {
       }
       const response = await reporter.render(request)
       response.content.toString().should.be.eql('hello')
+    })
+
+    it('should be able to require jsreport-proxy, find collection with parsed buffers', async () => {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: 'foo',
+        engine: 'jsrender',
+        recipe: 'html'
+      })
+
+      await reporter.documentStore.collection('assets').insert({
+        name: 'hello',
+        content: Buffer.from(JSON.stringify({ a: 'foo' }))
+      })
+
+      const request = {
+        template: {
+          content: 'original',
+          recipe: 'html',
+          engine: 'jsrender',
+          scripts: [{
+            content: `
+              const jsreport = require('jsreport-proxy')
+              function beforeRender(req, res, done) {
+                jsreport.documentStore.collection('assets').find({name: 'hello'}).then((result) => {
+                  req.template.content = JSON.parse(result[0].content.toString()).a
+                  done();
+                }).catch((e) => done(e))
+              }`
+          }]
+        }
+      }
+      const response = await reporter.render(request)
+      response.content.toString().should.be.eql('foo')
+    })
+
+    it('should be able to require jsreport-proxy, findOne collection with parsed buffers', async () => {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: 'foo',
+        engine: 'jsrender',
+        recipe: 'html'
+      })
+
+      await reporter.documentStore.collection('assets').insert({
+        name: 'hello',
+        content: Buffer.from(JSON.stringify({ a: 'foo' }))
+      })
+
+      const request = {
+        template: {
+          content: 'original',
+          recipe: 'html',
+          engine: 'jsrender',
+          scripts: [{
+            content: `
+              const jsreport = require('jsreport-proxy')
+              function beforeRender(req, res, done) {
+                jsreport.documentStore.collection('assets').findOne({name: 'hello'}).then((result) => {
+                  req.template.content = JSON.parse(result.content.toString()).a
+                  done();
+                }).catch((e) => done(e))
+              }`
+          }]
+        }
+      }
+      const response = await reporter.render(request)
+      response.content.toString().should.be.eql('foo')
     })
 
     it('callback error should be gracefully handled', async () => {
