@@ -1,9 +1,18 @@
 require('should')
 const Reporter = require('jsreport-core')
 const createRequest = require('jsreport-core/lib/render/request')
+// requiring winston that is dep of jsreport-core to be
+// able to cleanup transports
+const winston = require('winston')
 
 describe('scripts', () => {
   let reporter
+
+  beforeEach(() => {
+    if (winston.loggers.has('jsreport')) {
+      winston.loggers._delete('jsreport')
+    }
+  })
 
   afterEach(() => reporter.close())
 
@@ -13,7 +22,7 @@ describe('scripts', () => {
         .use(require('jsreport-templates')())
         .use(require('jsreport-assets')())
         .use(require('jsreport-jsrender')())
-        .use(require('../')({ timeout: 3000 }))
+        .use(require('../')({ timeout: 4000 }))
       return reporter.init()
     })
 
@@ -28,7 +37,8 @@ describe('scripts', () => {
       }).use(require('jsreport-templates')())
         .use(require('jsreport-jsrender')())
         .use(require('jsreport-assets')())
-        .use(require('../')({ timeout: 2000 }))
+        .use(require('../')({ timeout: 4000 }))
+
       return reporter.init()
     })
 
@@ -43,7 +53,7 @@ describe('scripts', () => {
         extensions: {
           scripts: {
             allowedModules: ['./helperA', 'underscore'],
-            timeout: 2000
+            timeout: 4000
           }
         }
       }).use(require('jsreport-templates')())
@@ -347,6 +357,112 @@ describe('scripts', () => {
       response.content.toString().should.be.eql('foo')
     })
 
+    it('should be able to require jsreport-proxy and render and get logs', async () => {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: '{{:~sayHi("foo")}}',
+        engine: 'jsrender',
+        recipe: 'html',
+        helpers: `
+          function sayHi (name) {
+            console.log('using helper "sayHi"')
+            return "Hi " + name
+          }
+        `
+      })
+
+      const request = {
+        template: {
+          content: 'original',
+          recipe: 'html',
+          engine: 'jsrender',
+          scripts: [{
+            content: `
+              const jsreport = require('jsreport-proxy')
+              function afterRender(req, res, done) {
+                console.log('message from script')
+
+                jsreport.render({ template: { name: 'foo' } }).then((resp) => {
+                  res.content = resp.content;
+                  done();
+                }).catch((e) => done(e))
+              }`
+          }]
+        }
+      }
+
+      const response = await reporter.render(request)
+
+      response.content.toString().should.be.eql('Hi foo')
+
+      const logs = response.meta.logs.map((i) => i.message)
+
+      logs.should.matchAny(/Rendering template { name: foo/)
+      logs.should.matchAny(/message from script/)
+      logs.should.matchAny(/using helper "sayHi"/)
+    })
+
+    it('should not be able to override context when rendering with jsreport.proxy', async () => {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: 'foo',
+        engine: 'jsrender',
+        recipe: 'html'
+      })
+
+      const request = {
+        template: {
+          content: 'original',
+          recipe: 'html',
+          engine: 'jsrender',
+          scripts: [{
+            content: `
+              const jsreport = require('jsreport-proxy')
+
+              async function beforeRender (req, res) {
+                req.data = req.data || {}
+                req.data.some = true
+                req.context.another = true
+              }
+
+              async function afterRender(req, res) {
+                const resp = await jsreport.render({
+                  template: { name: 'foo' },
+                  context: { user: { name: 'Jan' } }
+                })
+
+                debugger
+
+                res.content = resp.content;
+              }`
+          }]
+        },
+        context: {
+          user: { name: 'Boris' }
+        }
+      }
+
+      let contextChangedInsideProxyRender
+      let contextUserPropChangedInsideScript
+      let contextAnotherPropChangedInsideScript
+
+      reporter.afterRenderListeners.add('testing', (req, res) => {
+        if (req.context.isChildRequest) {
+          contextChangedInsideProxyRender = req.context.user.name !== 'Boris'
+        } else {
+          contextUserPropChangedInsideScript = req.context.user.name !== 'Boris'
+          contextAnotherPropChangedInsideScript = req.context.another === true
+        }
+      })
+
+      const response = await reporter.render(request)
+
+      response.content.toString().should.be.eql('foo')
+      contextChangedInsideProxyRender.should.be.eql(false)
+      contextUserPropChangedInsideScript.should.be.eql(false)
+      contextAnotherPropChangedInsideScript.should.be.eql(true)
+    })
+
     it('should be able to require jsreport-proxy and find collection', async () => {
       await reporter.documentStore.collection('templates').insert({
         name: 'foo',
@@ -543,7 +659,7 @@ describe('scripts', () => {
     })
 
     it('should monitor rendering cycles', async function () {
-      this.timeout(5000)
+      this.timeout(8000)
       await reporter.documentStore.collection('templates').insert({
         name: 'foo',
         content: 'foo',
