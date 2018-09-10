@@ -431,8 +431,6 @@ describe('scripts', () => {
                   context: { user: { name: 'Jan' } }
                 })
 
-                debugger
-
                 res.content = resp.content;
               }`
           }]
@@ -690,7 +688,7 @@ describe('scripts', () => {
       }
     })
 
-    it('should fail with script that tries to avoid sandbox (using global context)', async function () {
+    it('should fail with script that tries to avoid sandbox (using global context)', async () => {
       await reporter.documentStore.collection('templates').insert({
         name: 'foo',
         content: 'foo',
@@ -726,7 +724,7 @@ describe('scripts', () => {
       }
     })
 
-    it('should fail with script that tries to avoid sandbox (using objects exposed in global context)', async function () {
+    it('should fail with script that tries to avoid sandbox (using objects exposed in global context)', async () => {
       await reporter.documentStore.collection('templates').insert({
         name: 'foo',
         content: 'foo',
@@ -871,6 +869,67 @@ describe('scripts', () => {
         await reporter.scripts.handleBeforeRender(res.request, res.response)
       } catch (e) {
         e.should.be.Error()
+        e.message.should.be.eql('foo')
+      }
+    })
+
+    it('should disallow throwing values that are not errors (promise usage)', async () => {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: 'foo',
+        engine: 'jsrender',
+        recipe: 'html',
+        shortid: 'id',
+        scripts: [{
+          content: `
+            async function beforeRender(req, res) {
+              throw 2
+            }
+          `
+        }]
+      })
+
+      const request = {
+        template: {
+          shortid: 'id'
+        }
+      }
+
+      try {
+        await reporter.render(request)
+        throw new Error('It should have failed')
+      } catch (e) {
+        e.message.should.containEql('Script is trying to use value as an error but value is not valid error')
+      }
+    })
+
+    it('should disallow throwing values that are not errors (callback usage)', async () => {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: 'foo',
+        engine: 'jsrender',
+        recipe: 'html',
+        shortid: 'id',
+        scripts: [{
+          content: `
+            async function beforeRender(req, res, done) {
+              done(2)
+            }
+          `
+        }]
+      })
+
+      const request = {
+        template: {
+          shortid: 'id'
+        }
+      }
+
+      try {
+        await reporter.render(request)
+        throw new Error('It should have failed')
+      } catch (e) {
+        e.message.should.containEql('Script is trying to use value as an error but value is not valid error')
       }
     })
   }
