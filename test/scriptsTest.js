@@ -899,7 +899,7 @@ describe('scripts', () => {
         await reporter.render(request)
         throw new Error('It should have failed')
       } catch (e) {
-        e.message.should.containEql('Script is trying to use value as an error but value is not valid error')
+        e.message.should.containEql('Script threw with non-Error')
       }
     })
 
@@ -912,7 +912,7 @@ describe('scripts', () => {
         shortid: 'id',
         scripts: [{
           content: `
-            async function beforeRender(req, res, done) {
+            function beforeRender(req, res, done) {
               done(2)
             }
           `
@@ -929,7 +929,7 @@ describe('scripts', () => {
         await reporter.render(request)
         throw new Error('It should have failed')
       } catch (e) {
-        e.message.should.containEql('Script is trying to use value as an error but value is not valid error')
+        e.message.should.containEql('Script threw with non-Error')
       }
     })
   }
