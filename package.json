@@ -1,6 +1,6 @@
 {
   "name": "jsreport-scripts",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "jsreport extension capable of running custom javascript functions during the rendering process",
   "scripts": {
     "test": "mocha test --timeout 7000 && standard",
