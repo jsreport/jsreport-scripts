@@ -22,7 +22,7 @@ describe('scripts', () => {
         .use(require('jsreport-templates')())
         .use(require('jsreport-assets')())
         .use(require('jsreport-jsrender')())
-        .use(require('../')({ timeout: 4000 }))
+        .use(require('../')({ allowedModules: ['bluebird'], timeout: 4000 }))
       return reporter.init()
     })
 
@@ -37,7 +37,7 @@ describe('scripts', () => {
       }).use(require('jsreport-templates')())
         .use(require('jsreport-jsrender')())
         .use(require('jsreport-assets')())
-        .use(require('../')({ timeout: 4000 }))
+        .use(require('../')({ allowedModules: ['bluebird'], timeout: 4000 }))
 
       return reporter.init()
     })
@@ -52,7 +52,7 @@ describe('scripts', () => {
         templatingEngines: { strategy: 'in-process' },
         extensions: {
           scripts: {
-            allowedModules: ['./helperA', 'underscore'],
+            allowedModules: ['./helperA', 'underscore', 'bluebird'],
             timeout: 4000
           }
         }
@@ -931,6 +931,33 @@ describe('scripts', () => {
       } catch (e) {
         e.message.should.containEql('Script threw with non-Error')
       }
+    })
+
+    it('should not break when using different Promise implementation inside script', async () => {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: 'foo',
+        engine: 'jsrender',
+        recipe: 'html',
+        shortid: 'id',
+        scripts: [{
+          content: `
+            const Promise = require('bluebird')
+
+            function beforeRender(req, res) {
+
+            }
+          `
+        }]
+      })
+
+      const request = {
+        template: {
+          shortid: 'id'
+        }
+      }
+
+      await reporter.render(request)
     })
   }
 })
