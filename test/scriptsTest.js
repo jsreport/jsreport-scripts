@@ -78,7 +78,7 @@ describe('scripts', () => {
   })
 
   async function prepareTemplate (scriptContent) {
-    const script = await reporter.documentStore.collection('scripts').insert({ content: scriptContent, name: 'foo' })
+    const script = await reporter.documentStore.collection('scripts').insert({ name: 'script', content: scriptContent })
     return reporter.documentStore.collection('templates').insert({
       content: 'foo',
       name: 'foo',
