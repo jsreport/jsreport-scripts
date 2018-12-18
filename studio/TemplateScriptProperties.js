@@ -1,13 +1,9 @@
 import React, { Component } from 'react'
 import Studio from 'jsreport-studio'
 
-const MultiSelect = Studio.MultiSelect
+const EntityRefSelect = Studio.EntityRefSelect
 
 export default class TemplateScriptProperties extends Component {
-  selectScripts (entities) {
-    return Object.keys(entities).filter((k) => entities[k].__entitySet === 'scripts' && !entities[k].isGlobal).map((k) => entities[k])
-  }
-
   static getSelectedScripts (entity, entities) {
     const getName = (s) => {
       const foundScripts = Object.keys(entities).map((k) => entities[k]).filter((sc) => sc.shortid === s.shortid)
@@ -24,7 +20,9 @@ export default class TemplateScriptProperties extends Component {
   renderOrder () {
     const scripts = TemplateScriptProperties.getSelectedScripts(this.props.entity, this.props.entities)
 
-    return <span>{scripts.map((s) => <span key={s.shortid}>{s.name + ' '}</span>)}</span>
+    return (
+      <span>{scripts.map((s) => <span key={s.shortid}>{s.name + ' '}</span>)}</span>
+    )
   }
 
   componentDidMount () {
@@ -58,39 +56,20 @@ export default class TemplateScriptProperties extends Component {
   }
 
   render () {
-    const { entity, entities, onChange } = this.props
-    const scripts = this.selectScripts(entities)
-
-    const selectValues = (selectData, ascripts) => {
-      const { value: selectedValue, options } = selectData
-      let scripts = Object.assign([], ascripts)
-
-      for (var i = 0; i < options.length; i++) {
-        const optionIsSelected = selectedValue.indexOf(options[i].value) !== -1
-
-        if (optionIsSelected) {
-          if (!scripts.filter((s) => s.shortid === options[i].value).length) {
-            scripts.push({ shortid: options[i].value })
-          }
-        } else {
-          if (scripts.filter((s) => s.shortid === options[i].value).length) {
-            scripts = scripts.filter((s) => s.shortid !== options[i].value)
-          }
-        }
-      }
-
-      return scripts
-    }
+    const { entity, onChange } = this.props
 
     return (
       <div className='properties-section'>
         <div className='form-group'>
-          <MultiSelect
-            title='Use the checkboxes to select/deselect multiple options. The order of selected scripts is reflected on the server'
-            size={7}
+          <EntityRefSelect
+            headingLabel='Select script'
+            filter={(references) => {
+              const scripts = references.scripts.filter((e) => !e.isGlobal)
+              return { scripts: scripts }
+            }}
             value={entity.scripts ? entity.scripts.map((s) => s.shortid) : []}
-            onChange={(selectData) => onChange({ _id: entity._id, scripts: selectValues(selectData, entity.scripts) })}
-            options={scripts.map(s => ({ key: s.shortid, name: s.name, value: s.shortid }))}
+            onChange={(selected) => onChange({ _id: entity._id, scripts: selected.map((s) => ({ shortid: s.shortid })) })}
+            multiple
           />
           {(entity.scripts && entity.scripts.length) ? <div><span>Run order:</span>{this.renderOrder()}</div> : <div />}
         </div>

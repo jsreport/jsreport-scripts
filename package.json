@@ -3,6 +3,7 @@
   "version": "2.0.8",
   "description": "jsreport extension capable of running custom javascript functions during the rendering process",
   "scripts": {
+    "start": "jsreport-studio-start --httpPort 4300",
     "test": "mocha test --timeout 7000 && standard",
     "build": "jsreport-studio-build",
     "prepublish": "in-publish && jsreport-studio-build || not-in-publish"
