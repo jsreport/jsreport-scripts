@@ -601,6 +601,31 @@ describe('scripts', () => {
       response.content.toString().should.be.eql('foo')
     })
 
+    it('should be able to catch errors inside script when using jsreport-proxy documentStore', async () => {
+      const request = {
+        template: {
+          content: '{{:errorFromStore}}',
+          recipe: 'html',
+          engine: 'jsrender',
+          scripts: [{
+            content: `
+              const jsreport = require('jsreport-proxy')
+
+              async function beforeRender(req, res) {
+                try {
+                  await jsreport.documentStore.collection('unknown').find()
+                } catch (err) {
+                  req.data = req.data || {}
+                  req.data.errorFromStore = 'catched'
+                }
+              }`
+          }]
+        }
+      }
+      const response = await reporter.render(request)
+      response.content.toString().should.be.eql('catched')
+    })
+
     it('callback error should be gracefully handled', async () => {
       const request = {
         template: {
