@@ -1,6 +1,6 @@
 {
   "name": "jsreport-scripts",
-  "version": "2.0.11",
+  "version": "2.0.12",
   "description": "jsreport extension capable of running custom javascript functions during the rendering process",
   "scripts": {
     "start": "jsreport-studio-start --httpPort 4300",
