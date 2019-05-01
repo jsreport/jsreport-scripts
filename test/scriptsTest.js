@@ -1,4 +1,5 @@
-require('should')
+const should = require('should')
+const path = require('path')
 const Reporter = require('jsreport-core')
 const createRequest = require('jsreport-core/lib/render/request')
 // requiring winston that is dep of jsreport-core to be
@@ -329,6 +330,77 @@ describe('scripts', () => {
       }
     })
 
+    it('should be able to define custom jsreport-proxy method and handler', async () => {
+      reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'))
+
+      reporter.scripts.addProxyHandlers((reporterInstance) => ({
+        sayHello: (originalReq, spec, cb) => {
+          cb(null, `hello ${spec.data.name}`)
+        }
+      }))
+
+      const request = {
+        template: {
+          content: '{{:message}}',
+          recipe: 'html',
+          engine: 'jsrender',
+          scripts: [{
+            content: `
+              const jsreport = require('jsreport-proxy')
+              async function beforeRender(req, res) {
+                req.data = req.data || {}
+                req.data.message = await jsreport.custom.sayHello('custom')
+              }
+            `
+          }]
+        }
+      }
+
+      const response = await reporter.render(request)
+      response.content.toString().should.be.eql('hello custom')
+    })
+
+    it('should throw when passing invalid jsreport-proxy custom method module', async () => {
+      reporter.scripts.addProxyMethods(path.join(__dirname, 'invalidCustomProxyMethod.js'))
+
+      const request = {
+        template: {
+          content: 'original',
+          recipe: 'html',
+          engine: 'jsrender',
+          scripts: [{
+            content: `
+            `
+          }]
+        }
+      }
+
+      return should(reporter.render(request)).be.rejectedWith(/should export a function/)
+    })
+
+    it('should throw when no handler for jsreport-proxy custom method', async () => {
+      reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'))
+
+      const request = {
+        template: {
+          content: '{{:message}}',
+          recipe: 'html',
+          engine: 'jsrender',
+          scripts: [{
+            content: `
+              const jsreport = require('jsreport-proxy')
+              async function beforeRender(req, res) {
+                req.data = req.data || {}
+                req.data.message = await jsreport.custom.sayHello('custom')
+              }
+            `
+          }]
+        }
+      }
+
+      return should(reporter.render(request)).be.rejectedWith(/No jsreport-proxy method handler found for action/)
+    })
+
     it('should be able to require jsreport-proxy and render', async () => {
       await reporter.documentStore.collection('templates').insert({
         name: 'foo',
@@ -402,7 +474,7 @@ describe('scripts', () => {
       logs.should.matchAny(/using helper "sayHi"/)
     })
 
-    it('should not be able to override context when rendering with jsreport.proxy', async () => {
+    it('should not be able to override context when rendering with jsreport-proxy', async () => {
       await reporter.documentStore.collection('templates').insert({
         name: 'foo',
         content: 'foo',
