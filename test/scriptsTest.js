@@ -332,8 +332,8 @@ describe('scripts', () => {
 
     it('should be able to define custom jsreport-proxy method', async () => {
       reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'), (reporterInstance) => ({
-        sayHello: (originalReq, spec, cb) => {
-          cb(null, `hello ${spec.data.name}`)
+        sayHello: async (originalReq, spec) => {
+          return `hello ${spec.data.name}`
         }
       }))
 
