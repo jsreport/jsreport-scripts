@@ -330,10 +330,8 @@ describe('scripts', () => {
       }
     })
 
-    it('should be able to define custom jsreport-proxy method and handler', async () => {
-      reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'))
-
-      reporter.scripts.addProxyHandlers((reporterInstance) => ({
+    it('should be able to define custom jsreport-proxy method', async () => {
+      reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'), (reporterInstance) => ({
         sayHello: (originalReq, spec, cb) => {
           cb(null, `hello ${spec.data.name}`)
         }
@@ -361,7 +359,7 @@ describe('scripts', () => {
     })
 
     it('should throw when passing invalid jsreport-proxy custom method module', async () => {
-      reporter.scripts.addProxyMethods(path.join(__dirname, 'invalidCustomProxyMethod.js'))
+      reporter.scripts.addProxyMethods(path.join(__dirname, 'invalidCustomProxyMethod.js'), () => {})
 
       const request = {
         template: {
@@ -379,7 +377,7 @@ describe('scripts', () => {
     })
 
     it('should throw when no handler for jsreport-proxy custom method', async () => {
-      reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'))
+      reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'), () => {})
 
       const request = {
         template: {
