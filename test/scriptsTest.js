@@ -330,6 +330,29 @@ describe('scripts', () => {
       }
     })
 
+    it('should be able to cancel request with message', async () => {
+      const res = await prepareRequest(`function beforeRender(req, res, done) { req.cancel('custom message'); } `)
+      try {
+        await reporter.scripts.handleBeforeRender(res.request, res.response)
+        throw new Error('Should have failed')
+      } catch (e) {
+        e.canceled.should.be.true()
+        e.message.should.containEql('custom message')
+      }
+    })
+
+    it('should be able to cancel request with custom http status code', async () => {
+      const res = await prepareRequest(`function beforeRender(req, res, done) { req.cancel({ message: 'custom message', statusCode: 406 }); } `)
+      try {
+        await reporter.scripts.handleBeforeRender(res.request, res.response)
+        throw new Error('Should have failed')
+      } catch (e) {
+        e.canceled.should.be.true()
+        e.statusCode.should.be.eql(406)
+        e.message.should.containEql('custom message')
+      }
+    })
+
     it('should be able to define custom jsreport-proxy method', async () => {
       reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'), (reporterInstance) => ({
         sayHello: async (originalReq, spec) => {
