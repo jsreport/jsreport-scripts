@@ -354,11 +354,7 @@ describe('scripts', () => {
     })
 
     it('should be able to define custom jsreport-proxy method', async () => {
-      reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'), (reporterInstance) => ({
-        sayHello: async (originalReq, spec) => {
-          return `hello ${spec.data.name}`
-        }
-      }))
+      reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'), path.join(__dirname, 'customProxyHandler.js'))
 
       const request = {
         template: {
@@ -382,7 +378,7 @@ describe('scripts', () => {
     })
 
     it('should throw when passing invalid jsreport-proxy custom method module', async () => {
-      reporter.scripts.addProxyMethods(path.join(__dirname, 'invalidCustomProxyMethod.js'), () => {})
+      reporter.scripts.addProxyMethods(path.join(__dirname, 'invalidCustomProxy.js'), path.join(__dirname, 'customProxyHandler.js'))
 
       const request = {
         template: {
@@ -399,8 +395,31 @@ describe('scripts', () => {
       return should(reporter.render(request)).be.rejectedWith(/should export a function/)
     })
 
-    it('should throw when no handler for jsreport-proxy custom method', async () => {
-      reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'), () => {})
+    it('should throw when passing invalid jsreport-proxy custom method handler module', async () => {
+      reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'), path.join(__dirname, 'invalidCustomProxy.js'))
+
+      const request = {
+        template: {
+          content: '{{:message}}',
+          recipe: 'html',
+          engine: 'jsrender',
+          scripts: [{
+            content: `
+              const jsreport = require('jsreport-proxy')
+              async function beforeRender(req, res) {
+                req.data = req.data || {}
+                req.data.message = await jsreport.custom.sayHello('custom')
+              }
+            `
+          }]
+        }
+      }
+
+      return should(reporter.render(request)).be.rejectedWith(/should export a function/)
+    })
+
+    it('should throw when no handler for jsreport-proxy custom method handler', async () => {
+      reporter.scripts.addProxyMethods(path.join(__dirname, 'customProxyMethod.js'), path.join(__dirname, 'emptyProxyHandler.js'))
 
       const request = {
         template: {
