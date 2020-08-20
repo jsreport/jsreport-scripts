@@ -16,7 +16,7 @@ describe('scripts', () => {
   })
 
   afterEach(() => reporter.close())
-
+  /*
   describe('scripts with dedicated-process strategy', () => {
     beforeEach(() => {
       reporter = Reporter()
@@ -45,7 +45,7 @@ describe('scripts', () => {
 
     common()
     commonSafe()
-  })
+  }) */
 
   describe('scripts with in-process strategy', () => {
     beforeEach(() => {
@@ -467,6 +467,47 @@ describe('scripts', () => {
       }
       const response = await reporter.render(request)
       response.content.toString().should.be.eql('foo')
+    })
+
+    it.only('should be able to require jsreport-proxy and render and reust the shared context', async () => {
+      await reporter.documentStore.collection('templates').insert({
+        name: 'foo',
+        content: 'foo',
+        engine: 'none',
+        recipe: 'html',
+        scripts: [{
+          content: `            
+            async function afterRender(req, res) {
+              req.context.shared.text += '2'
+            }`
+        }]
+      })
+
+      const request = {
+        template: {
+          content: 'original',
+          recipe: 'html',
+          engine: 'none',
+          scripts: [{
+            content: `
+              const jsreport = require('jsreport-proxy')
+              async function afterRender(req, res) {
+                req.context.shared.text += '1'
+                await jsreport.render({ template: { name: 'foo' } })
+                req.context.shared.text += '3'
+                res.content = req.context.shared.text
+              }`
+          }]
+        },
+        context: {
+          shared: {
+            text: ''
+          }
+        }
+      }
+      const response = await reporter.render(request)
+      console.log(response.content.toString())
+      response.content.toString().should.be.eql('123')
     })
 
     it('should be able to require jsreport-proxy and render and get logs', async () => {
