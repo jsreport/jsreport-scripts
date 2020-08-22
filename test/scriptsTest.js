@@ -476,7 +476,7 @@ describe('scripts', () => {
         engine: 'none',
         recipe: 'html',
         scripts: [{
-          content: `            
+          content: `
             async function afterRender(req, res) {
               req.context.shared.text += '2'
             }`
