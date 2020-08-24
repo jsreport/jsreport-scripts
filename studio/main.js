@@ -107,11 +107,11 @@ var _ScriptEditor = __webpack_require__(3);
 
 var _ScriptEditor2 = _interopRequireDefault(_ScriptEditor);
 
-var _TemplateScriptProperties = __webpack_require__(5);
+var _TemplateScriptProperties = __webpack_require__(4);
 
 var _TemplateScriptProperties2 = _interopRequireDefault(_TemplateScriptProperties);
 
-var _ScriptProperties = __webpack_require__(6);
+var _ScriptProperties = __webpack_require__(5);
 
 var _ScriptProperties2 = _interopRequireDefault(_ScriptProperties);
 
@@ -183,10 +183,6 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _propTypes = __webpack_require__(4);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
@@ -234,20 +230,8 @@ var ScriptEditor = function (_Component) {
 
 exports.default = ScriptEditor;
 
-
-ScriptEditor.propTypes = {
-  entity: _propTypes2.default.object.isRequired,
-  onUpdate: _propTypes2.default.func.isRequired
-};
-
 /***/ }),
 /* 4 */
-/***/ (function(module, exports) {
-
-module.exports = Studio.libraries['prop-types'];
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -421,7 +405,7 @@ var TemplateScriptProperties = function (_Component) {
 exports.default = TemplateScriptProperties;
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

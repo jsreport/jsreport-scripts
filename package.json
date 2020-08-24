@@ -42,7 +42,7 @@
     "jsreport-assets": "1.6.0",
     "jsreport-core": "github:jsreport/jsreport-core#tmp_shared_context",
     "jsreport-jsrender": "2.1.1",
-    "jsreport-studio-dev": "github:jsreport/jsreport-studio-dev",
+    "jsreport-studio-dev": "1.5.0",
     "jsreport-templates": "2.4.0",
     "mocha": "5.2.0",
     "should": "13.2.3",

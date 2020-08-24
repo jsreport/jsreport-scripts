@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types'
 import React, { Component } from 'react'
 import { TextEditor } from 'jsreport-studio'
 
@@ -15,9 +14,4 @@ export default class ScriptEditor extends Component {
       />
     )
   }
-}
-
-ScriptEditor.propTypes = {
-  entity: PropTypes.object.isRequired,
-  onUpdate: PropTypes.func.isRequired
 }

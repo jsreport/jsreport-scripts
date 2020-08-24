@@ -16,7 +16,7 @@ describe('scripts', () => {
   })
 
   afterEach(() => reporter.close())
-  /*
+
   describe('scripts with dedicated-process strategy', () => {
     beforeEach(() => {
       reporter = Reporter()
@@ -45,7 +45,7 @@ describe('scripts', () => {
 
     common()
     commonSafe()
-  }) */
+  })
 
   describe('scripts with in-process strategy', () => {
     beforeEach(() => {
@@ -469,7 +469,7 @@ describe('scripts', () => {
       response.content.toString().should.be.eql('foo')
     })
 
-    it.only('should be able to require jsreport-proxy and render and reust the shared context', async () => {
+    it('should be able to require jsreport-proxy and render and reust the shared context', async () => {
       await reporter.documentStore.collection('templates').insert({
         name: 'foo',
         content: 'foo',
@@ -506,7 +506,6 @@ describe('scripts', () => {
         }
       }
       const response = await reporter.render(request)
-      console.log(response.content.toString())
       response.content.toString().should.be.eql('123')
     })
 
