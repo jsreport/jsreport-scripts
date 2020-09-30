@@ -1,8 +1,8 @@
 
 module.exports = {
-  'name': 'scripts',
-  'main': 'lib/scripts.js',
-  'optionsSchema': {
+  name: 'scripts',
+  main: 'lib/scripts.js',
+  optionsSchema: {
     extensions: {
       scripts: {
         type: 'object',
@@ -21,6 +21,6 @@ module.exports = {
       }
     }
   },
-  'dependencies': ['templates', 'data'],
-  'embeddedSupport': true
+  dependencies: ['templates', 'data'],
+  embeddedSupport: true
 }

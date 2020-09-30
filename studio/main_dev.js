@@ -4,7 +4,8 @@ import ScriptProperties from './ScriptProperties.js'
 import Studio from 'jsreport-studio'
 
 Studio.addEntitySet(
-  { name: 'scripts',
+  {
+    name: 'scripts',
     faIcon: 'fa-cog',
     visibleName: 'script',
     helpUrl: 'http://jsreport.net/learn/scripts',

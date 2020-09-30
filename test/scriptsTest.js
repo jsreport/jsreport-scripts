@@ -19,7 +19,9 @@ describe('scripts', () => {
 
   describe('scripts with dedicated-process strategy', () => {
     beforeEach(() => {
-      reporter = Reporter()
+      reporter = Reporter({
+        templatingEngines: { strategy: 'dedicated-process' }
+      })
         .use(require('jsreport-templates')())
         .use(require('jsreport-assets')())
         .use(require('jsreport-jsrender')())
@@ -99,7 +101,7 @@ describe('scripts', () => {
 
   function commonSafe () {
     it('should propagate exception from async back', async () => {
-      const res = await prepareRequest(`function beforeRender(req, res, done) { setTimeout(function() { foo; }, 0); }`)
+      const res = await prepareRequest('function beforeRender(req, res, done) { setTimeout(function() { foo; }, 0); }')
       try {
         await reporter.scripts.handleBeforeRender(res.request, res.response)
         throw new Error('Should have fail')
@@ -119,7 +121,7 @@ describe('scripts', () => {
       const res = {}
 
       await reporter.documentStore.collection('scripts').insert({
-        content: `function beforeRender(req, res, done) { req.template.content = 'xxx'; done() }`,
+        content: 'function beforeRender(req, res, done) { req.template.content = \'xxx\'; done() }',
         name: 'foo'
       })
 
@@ -252,19 +254,19 @@ describe('scripts', () => {
     })
 
     it('should be able to modify request.data', async () => {
-      const res = await prepareRequest(`function beforeRender(req, res, done) { req.data = 'xxx'; done() } `)
+      const res = await prepareRequest('function beforeRender(req, res, done) { req.data = \'xxx\'; done() } ')
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.data.should.be.eql('xxx')
     })
 
     it('should be able to modify complex request.data', async () => {
-      const res = await prepareRequest(`function beforeRender(req, res, done) { req.data = { a: 'xxx' }; done() }`)
+      const res = await prepareRequest('function beforeRender(req, res, done) { req.data = { a: \'xxx\' }; done() }')
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.data.a.should.be.eql('xxx')
     })
 
     it('should be able to modify request.template.content', async () => {
-      const res = await prepareRequest(`function beforeRender(req, res, done) { req.template.content = 'xxx'; done() }`)
+      const res = await prepareRequest('function beforeRender(req, res, done) { req.template.content = \'xxx\'; done() }')
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.template.content.should.be.eql('xxx')
     })
@@ -287,7 +289,7 @@ describe('scripts', () => {
     })
 
     it('should be able to processes async function', async () => {
-      const res = await prepareRequest(`function beforeRender(req, res, done) { setTimeout(function(){ req.template.content = 'xxx'; done(); }, 10); }`)
+      const res = await prepareRequest('function beforeRender(req, res, done) { setTimeout(function(){ req.template.content = \'xxx\'; done(); }, 10); }')
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.template.content.should.be.eql('xxx')
     })
@@ -314,13 +316,13 @@ describe('scripts', () => {
     })
 
     it('should be able to add property to request', async () => {
-      const res = await prepareRequest(`function beforeRender(req, res, done) { req.context.foo = 'xxx'; done(); } `)
+      const res = await prepareRequest('function beforeRender(req, res, done) { req.context.foo = \'xxx\'; done(); } ')
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.context.foo.should.be.eql('xxx')
     })
 
     it('should be able to cancel request', async () => {
-      const res = await prepareRequest(`function beforeRender(req, res, done) { req.cancel(); } `)
+      const res = await prepareRequest('function beforeRender(req, res, done) { req.cancel(); } ')
       try {
         await reporter.scripts.handleBeforeRender(res.request, res.response)
         throw new Error('Should have failed')
@@ -331,7 +333,7 @@ describe('scripts', () => {
     })
 
     it('should be able to cancel request with message', async () => {
-      const res = await prepareRequest(`function beforeRender(req, res, done) { req.cancel('custom message'); } `)
+      const res = await prepareRequest('function beforeRender(req, res, done) { req.cancel(\'custom message\'); } ')
       try {
         await reporter.scripts.handleBeforeRender(res.request, res.response)
         throw new Error('Should have failed')
@@ -342,7 +344,7 @@ describe('scripts', () => {
     })
 
     it('should be able to cancel request with custom http status code', async () => {
-      const res = await prepareRequest(`function beforeRender(req, res, done) { req.cancel({ message: 'custom message', statusCode: 406 }); } `)
+      const res = await prepareRequest('function beforeRender(req, res, done) { req.cancel({ message: \'custom message\', statusCode: 406 }); } ')
       try {
         await reporter.scripts.handleBeforeRender(res.request, res.response)
         throw new Error('Should have failed')
@@ -1041,7 +1043,8 @@ describe('scripts', () => {
     })
 
     it('should fail with proper Error', async () => {
-      const res = await prepareRequest(`function beforeRender(req, res, done) { done(new Error('foo')) } `)
+      const res = await prepareRequest('function beforeRender(req, res, done) { done(new Error(\'foo\')) } ')
+
       try {
         await reporter.scripts.handleBeforeRender(res.request, res.response)
       } catch (e) {
