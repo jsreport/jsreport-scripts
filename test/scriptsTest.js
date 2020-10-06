@@ -1,7 +1,9 @@
 const should = require('should')
 const path = require('path')
+const { sharedData } = require('serializator')
 const Reporter = require('jsreport-core')
-const createRequest = require('jsreport-core/lib/render/request')
+const { Request } = require('jsreport-core')
+const Response = require('jsreport-core/lib/render/response')
 // requiring winston that is dep of jsreport-core to be
 // able to cleanup transports
 const winston = require('winston')
@@ -67,7 +69,7 @@ describe('scripts', () => {
     })
 
     it('should be able to require local functions', async () => {
-      const req = createRequest({
+      const req = createRequest(reporter, {
         template: {
           scripts: [{ content: "function beforeRender(req, res, done) { req.template.content = require('./helperA')(); done(); }" }]
         }
@@ -93,9 +95,10 @@ describe('scripts', () => {
 
   async function prepareRequest (scriptContent) {
     const template = await prepareTemplate(scriptContent)
+
     return {
-      request: createRequest({ template: template, options: {} }),
-      response: {}
+      request: createRequest(reporter, { template: template, options: {} }),
+      response: Response({})
     }
   }
 
@@ -117,7 +120,7 @@ describe('scripts', () => {
 
   function common () {
     it('should find script by its name', async () => {
-      const req = createRequest({ template: { scripts: [{ name: 'foo' }] } })
+      const req = createRequest(reporter, { template: { scripts: [{ name: 'foo' }] } })
       const res = {}
 
       await reporter.documentStore.collection('scripts').insert({
@@ -151,7 +154,7 @@ describe('scripts', () => {
         name: 'd'
       })
 
-      const req = createRequest({
+      const req = createRequest(reporter, {
         template: { content: 'foo', scripts: [{ shortid: 'a' }, { shortid: 'b' }, { shortid: 'c' }, { shortid: 'd' }] }
       })
       await reporter.scripts.handleBeforeRender(req, {})
@@ -159,7 +162,7 @@ describe('scripts', () => {
     })
 
     it('should throw only weak error when script is not found', async () => {
-      const req = createRequest({
+      const req = createRequest(reporter, {
         template: { content: 'foo', scripts: [{ shortid: 'a' }] }
       })
 
@@ -192,7 +195,7 @@ describe('scripts', () => {
         shortid: 'd'
       })
 
-      const req = createRequest({
+      const req = createRequest(reporter, {
         template: { engine: 'none', recipe: 'html', content: 'foo', scripts: [{ shortid: 'a' }, { shortid: 'b' }, { shortid: 'c' }, { shortid: 'd' }] }
       })
 
@@ -213,7 +216,7 @@ describe('scripts', () => {
         isGlobal: true
       })
 
-      const req = createRequest({
+      const req = createRequest(reporter, {
         template: { content: '', scripts: [{ shortid: 'a' }] }
       })
       await reporter.scripts.handleBeforeRender(req, {})
@@ -244,8 +247,8 @@ describe('scripts', () => {
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       await reporter.scripts.handleAfterRender(res.request, res.response)
 
-      res.request.data.beforeRender.haveParsedScripts.should.be.false()
-      res.request.data.beforeRender.willRunAfterRender.should.be.false()
+      sharedData.getData(res.request.data).beforeRender.haveParsedScripts.should.be.false()
+      sharedData.getData(res.request.data).beforeRender.willRunAfterRender.should.be.false()
 
       const resContent = JSON.parse(res.response.content.toString())
 
@@ -254,21 +257,26 @@ describe('scripts', () => {
     })
 
     it('should be able to modify request.data', async () => {
-      const res = await prepareRequest('function beforeRender(req, res, done) { req.data = \'xxx\'; done() } ')
+      const res = await prepareRequest('function beforeRender(req, res, done) { req.data = { foo: true }; done() } ')
       await reporter.scripts.handleBeforeRender(res.request, res.response)
-      res.request.data.should.be.eql('xxx')
+      sharedData.getData(res.request.data).foo.should.be.True()
     })
 
     it('should be able to modify complex request.data', async () => {
       const res = await prepareRequest('function beforeRender(req, res, done) { req.data = { a: \'xxx\' }; done() }')
       await reporter.scripts.handleBeforeRender(res.request, res.response)
-      res.request.data.a.should.be.eql('xxx')
+      sharedData.getData(res.request.data).a.should.be.eql('xxx')
     })
 
     it('should be able to modify request.template.content', async () => {
       const res = await prepareRequest('function beforeRender(req, res, done) { req.template.content = \'xxx\'; done() }')
       await reporter.scripts.handleBeforeRender(res.request, res.response)
       res.request.template.content.should.be.eql('xxx')
+    })
+
+    it('should throw error when modifying request.data to non object-value', async () => {
+      const res = await prepareRequest('function beforeRender(req, res, done) { req.data = \'xxx\'; done() }')
+      return reporter.scripts.handleBeforeRender(res.request, res.response).should.be.rejectedWith(/req\.data must be an object/)
     })
 
     it('should not be able to read local files', async () => {
@@ -1002,9 +1010,9 @@ describe('scripts', () => {
     })
 
     it('should support returning promise from beforeRender', async () => {
-      const res = await prepareRequest("function beforeRender(req, res) { return new Promise((resolve) => { req.data = 'xxx'; resolve() }) }")
+      const res = await prepareRequest("function beforeRender(req, res) { return new Promise((resolve) => { req.data.x = 'xxx'; resolve() }) }")
       await reporter.scripts.handleBeforeRender(res.request, res.response)
-      res.request.data.should.be.eql('xxx')
+      res.request.data.x.should.be.eql('xxx')
     })
 
     it('should support returning promise from afterRender', async () => {
@@ -1021,9 +1029,9 @@ describe('scripts', () => {
     })
 
     it('should support async beforeRender', async () => {
-      const res = await prepareRequest("async function beforeRender(req, res) { await new Promise((resolve) => { req.data = 'xxx'; resolve() }) }")
+      const res = await prepareRequest("async function beforeRender(req, res) { await new Promise((resolve) => { req.data.x = 'xxx'; resolve() }) }")
       await reporter.scripts.handleBeforeRender(res.request, res.response)
-      res.request.data.should.be.eql('xxx')
+      res.request.data.x.should.be.eql('xxx')
     })
 
     it('should write console.log to the logger', async () => {
@@ -1141,3 +1149,9 @@ describe('scripts', () => {
     })
   }
 })
+
+function createRequest (reporter, ...args) {
+  const req = Request(...args)
+  req.data = reporter.createRequestData(req.data)
+  return req
+}
