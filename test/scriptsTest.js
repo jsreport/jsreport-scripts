@@ -19,6 +19,25 @@ describe('scripts', () => {
 
   afterEach(() => reporter.close())
 
+  describe('scripts with worker-threads strategy', () => {
+    beforeEach(() => {
+      reporter = Reporter({
+        templatingEngines: { strategy: 'worker-threads' }
+      })
+        .use(require('jsreport-templates')())
+        .use(require('jsreport-assets')())
+        .use(require('jsreport-jsrender')())
+        .use(require('../')({
+          allowedModules: ['bluebird'],
+          timeout: 4000
+        }))
+      return reporter.init()
+    })
+
+    common()
+    commonSafe()
+  })
+
   describe('scripts with dedicated-process strategy', () => {
     beforeEach(() => {
       reporter = Reporter({
@@ -27,7 +46,10 @@ describe('scripts', () => {
         .use(require('jsreport-templates')())
         .use(require('jsreport-assets')())
         .use(require('jsreport-jsrender')())
-        .use(require('../')({ allowedModules: ['bluebird'], timeout: 4000 }))
+        .use(require('../')({
+          allowedModules: ['bluebird'],
+          timeout: 4000
+        }))
       return reporter.init()
     })
 
@@ -42,7 +64,10 @@ describe('scripts', () => {
       }).use(require('jsreport-templates')())
         .use(require('jsreport-jsrender')())
         .use(require('jsreport-assets')())
-        .use(require('../')({ allowedModules: ['bluebird'], timeout: 4000 }))
+        .use(require('../')({
+          allowedModules: ['bluebird'],
+          timeout: 4000
+        }))
 
       return reporter.init()
     })
@@ -1012,7 +1037,7 @@ describe('scripts', () => {
     it('should support returning promise from beforeRender', async () => {
       const res = await prepareRequest("function beforeRender(req, res) { return new Promise((resolve) => { req.data.x = 'xxx'; resolve() }) }")
       await reporter.scripts.handleBeforeRender(res.request, res.response)
-      res.request.data.x.should.be.eql('xxx')
+      sharedData.getData(res.request.data).x.should.be.eql('xxx')
     })
 
     it('should support returning promise from afterRender', async () => {
@@ -1031,7 +1056,7 @@ describe('scripts', () => {
     it('should support async beforeRender', async () => {
       const res = await prepareRequest("async function beforeRender(req, res) { await new Promise((resolve) => { req.data.x = 'xxx'; resolve() }) }")
       await reporter.scripts.handleBeforeRender(res.request, res.response)
-      res.request.data.x.should.be.eql('xxx')
+      sharedData.getData(res.request.data).x.should.be.eql('xxx')
     })
 
     it('should write console.log to the logger', async () => {
